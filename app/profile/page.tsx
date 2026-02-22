@@ -2,6 +2,9 @@ import prisma from "@/lib/prisma";
 import VerificationRequest from "@/components/VerificationRequest";
 import TrustBadge from "@/components/TrustBadge";
 
+// Force dynamic rendering to prevent build-time database connections
+export const dynamic = 'force-dynamic';
+
 // Mock user for now
 const MOCK_USER_ID = "user_123";
 
