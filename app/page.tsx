@@ -9,14 +9,21 @@ import Hero from "@/components/Hero";
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-    const listings = await prisma.listing.findMany({
-        where: {
-            status: "PAID",
-        },
-        orderBy: {
-            createdAt: "desc",
-        },
-    });
+    let listings: any[] = [];
+
+    try {
+        listings = await prisma.listing.findMany({
+            where: {
+                status: "PAID",
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+    } catch (error) {
+        console.error("Erreur de connexion à la base de données (page d'accueil):", error);
+        // On continue avec un tableau vide pour ne pas faire planter tout le site
+    }
 
     return (
         <>
