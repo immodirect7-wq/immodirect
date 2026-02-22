@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  phone         String    @unique
+  email         String?   @unique
+  password      String?
+  role          String    @default("SEEKER") // OWNER, SEEKER, ADMIN
+  trustScore    Int       @default(0)
+  hasActivePass Boolean   @default(false)
+  passExpiry    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  listings      Listing[]
+  transactions  Transaction[]
+  verifications Verification[]
+}
+
+model Listing {
+  id           String        @id @default(cuid())
+  title        String
+  description  String
+  price        Float
+  advanceMonths Int        @default(0)
+  neighborhood String
+  city         String
+  latitude     Float?
+  longitude    Float?
+  images       String // Store component images as JSON string or comma-separated
+  status       String        @default("PENDING") // PENDING, PAID, EXPIRED
+  ownerId      String
+  owner        User          @relation(fields: [ownerId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Transaction  Transaction[]
+}
+
+model Transaction {
+  id        String            @id @default(cuid())
+  amount    Float
+  provider  String            // MTN, ORANGE, CASH
+  status    String            @default("PENDING") // PENDING, SUCCESS, FAILED
+  reference String            @unique
+  userId    String
+  user      User              @relation(fields: [userId], references: [id])
+  listingId String?
+  listing   Listing?          @relation(fields: [listingId], references: [id])
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model Verification {
+  id        String             @id @default(cuid())
+  type      String             // PHONE, UTILITY_BILL, SOCIAL, ID_CARD
+  status    String             @default("PENDING") // PENDING, APPROVED, REJECTED
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+}
+
+// Enums are not supported in SQLite, so we use String
+// Role: OWNER, SEEKER, ADMIN
+// ListingStatus: PENDING, PAID, EXPIRED
+// PaymentProvider: MTN, ORANGE, CASH
+// TransactionStatus: PENDING, SUCCESS, FAILED
+// VerificationType: PHONE, UTILITY_BILL, SOCIAL, ID_CARD
+// VerificationStatus: PENDING, APPROVED, REJECTED
