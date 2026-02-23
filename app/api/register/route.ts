@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
     try {
@@ -16,16 +14,36 @@ export async function POST(req: Request) {
             );
         }
 
-        // Check if user exists
-        const existingUser = await prisma.user.findUnique({
-            where: { email },
+        if (!phone) {
+            return NextResponse.json(
+                { message: "Le numéro de téléphone est requis." },
+                { status: 400 }
+            );
+        }
+
+        // Check if user exists by email or phone
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email },
+                    { phone }
+                ]
+            },
         });
 
         if (existingUser) {
-            return NextResponse.json(
-                { message: "Cet email est déjà utilisé." },
-                { status: 400 }
-            );
+            if (existingUser.email === email) {
+                return NextResponse.json(
+                    { message: "Cet email est déjà utilisé." },
+                    { status: 400 }
+                );
+            }
+            if (existingUser.phone === phone) {
+                return NextResponse.json(
+                    { message: "Ce numéro de téléphone est déjà utilisé." },
+                    { status: 400 }
+                );
+            }
         }
 
         // Hash password
@@ -45,7 +63,7 @@ export async function POST(req: Request) {
             data: {
                 email,
                 password: hashedPassword,
-                phone: phone || `temp_${Date.now()}`, // Fallback if phone not meant to be primary for email users
+                phone,
                 role: "SEEKER",
             },
         });
