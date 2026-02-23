@@ -9,19 +9,22 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
-  phone         String    @unique
+  phone         String?   @unique
   email         String?   @unique
   password      String?
   role          String    @default("SEEKER") // OWNER, SEEKER, ADMIN
   trustScore    Int       @default(0)
   hasActivePass Boolean   @default(false)
   passExpiry    DateTime?
+  isBanned      Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   listings      Listing[]
   transactions  Transaction[]
   verifications Verification[]
+  sentMessages  Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model Listing {
@@ -41,6 +44,7 @@ model Listing {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   Transaction  Transaction[]
+  Message      Message[]
 }
 
 model Transaction {
@@ -55,6 +59,24 @@ model Transaction {
   listing   Listing?          @relation(fields: [listingId], references: [id])
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  content     String
+  isRead      Boolean  @default(false)
+  
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  
+  receiverId  String
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  
+  listingId   String?
+  listing     Listing? @relation(fields: [listingId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Verification {

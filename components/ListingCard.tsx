@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { MapPin, CheckCircle } from "lucide-react";
 import TrustBadge from "./TrustBadge";
+import ImageCarousel from "./ImageCarousel";
 
 interface ListingCardProps {
     id: string;
@@ -16,14 +16,12 @@ interface ListingCardProps {
 }
 
 export default function ListingCard({ id, title, price, neighborhood, city, images, trustScore, status }: ListingCardProps) {
-    let parsedImages = [];
+    let parsedImages: string[] = [];
     try {
         parsedImages = JSON.parse(images);
     } catch (e) {
         parsedImages = [];
     }
-
-    const mainImage = parsedImages.length > 0 ? parsedImages[0] : "/placeholder-house.jpg";
 
     return (
         <Link href={`/listings/${id}`} className="group block h-full">
@@ -46,17 +44,11 @@ export default function ListingCard({ id, title, price, neighborhood, city, imag
                         )}
                     </div>
 
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
-                        {parsedImages.length > 0 ? (
-                            <Image
-                                src={mainImage}
-                                alt={title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        ) : (
-                            <span>Aucune image</span>
-                        )}
+                    <div className="w-full h-full relative">
+                        <ImageCarousel
+                            images={parsedImages}
+                            title={title}
+                        />
                     </div>
                 </div>
 

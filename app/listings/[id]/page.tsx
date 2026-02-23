@@ -38,7 +38,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
         });
 
         if (user) {
-            userPhone = user.phone;
+            userPhone = user.phone || "";
             // Check 1: Active Pass
             if (user.hasActivePass && user.passExpiry && user.passExpiry > new Date()) {
                 isUnlocked = true;
@@ -104,7 +104,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
                 <h2 className="font-semibold mb-4">Contact</h2>
                 <ContactAction
                     isUnlocked={isUnlocked}
-                    ownerPhone={listing.owner.phone}
+                    ownerPhone={listing.owner.phone || ""}
                     listingId={listing.id}
                     listingTitle={listing.title}
                     userPhone={userPhone} // Pass user phone for payment init

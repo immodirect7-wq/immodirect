@@ -16,7 +16,7 @@ export default function Navbar() {
     return (
         <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50 h-16 transition-all duration-300">
             <div className="container mx-auto px-4 h-full flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 font-bold text-2xl text-primary">
+                <Link href="/" className="flex items-center gap-3 font-bold text-2xl text-slate-800 hover:text-primary transition-colors">
                     <Image src="/logo.png" alt="ImmoDirect Logo" width={40} height={40} className="object-contain" />
                     <span>ImmoDirect</span>
                 </Link>
@@ -24,33 +24,28 @@ export default function Navbar() {
                 <div className="hidden md:flex items-center gap-6">
                     <Link
                         href="/listings/create"
-                        className="bg-primary text-white hover:bg-blue-700 transition-colors px-6 py-2 rounded-full font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transform active:scale-95"
+                        className="bg-white text-primary border border-primary hover:bg-blue-50 transition-colors px-6 py-2.5 rounded-lg font-bold flex items-center gap-2"
                     >
                         <PlusCircle size={18} />
-                        Publier
+                        Publier une annonce
                     </Link>
 
                     {/* Auth Buttons */}
-                    <div className="flex items-center gap-3">
-                        {/* Signup */}
-                        <Link
-                            href="/auth/signup"
-                            className="text-primary font-semibold hover:bg-blue-50 px-4 py-2 rounded-full transition-colors"
-                        >
-                            Inscription
-                        </Link>
-
-                        {/* Login */}
+                    <div className="flex items-center gap-4 border-l border-gray-200 pl-6">
                         <Link
                             href="/auth/signin"
-                            className="bg-slate-900 text-white px-5 py-2 rounded-full font-semibold hover:bg-slate-800 transition-colors flex items-center gap-2"
+                            className="text-slate-700 font-bold hover:text-primary transition-colors flex items-center gap-2"
                         >
-                            <LogIn size={18} />
-                            Connexion
+                            <User size={18} />
+                            Se connecter
                         </Link>
-                    </div>
-
-                    {/* Profile Link (Optional if logged in) */}
+                        <Link
+                            href="/auth/signup"
+                            className="bg-primary text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                        >
+                            S'inscrire
+                        </Link>
+                    </div>                    {/* Profile Link (Optional if logged in) */}
                     {/* <Link href="/profile" className="..."> ... </Link> */}
                 </div>
 
@@ -62,14 +57,23 @@ export default function Navbar() {
             {/* Mobile Menu */}
             {isOpen && (
                 <div className="md:hidden bg-white border-b py-4 px-4 flex flex-col gap-4 shadow-lg absolute w-full top-16 left-0">
-                    <Link
-                        href="/auth/signin"
-                        onClick={() => setIsOpen(false)}
-                        className="bg-slate-900 text-white w-full py-3 rounded-full font-semibold flex justify-center items-center gap-2"
-                    >
-                        <LogIn size={18} />
-                        Connexion / Inscription
-                    </Link>
+                    <div className="flex gap-2 w-full">
+                        <Link
+                            href="/auth/signin"
+                            onClick={() => setIsOpen(false)}
+                            className="bg-slate-100 text-slate-800 w-1/2 py-3 rounded-full font-semibold flex justify-center items-center gap-2"
+                        >
+                            <LogIn size={18} />
+                            Connexion
+                        </Link>
+                        <Link
+                            href="/auth/signup"
+                            onClick={() => setIsOpen(false)}
+                            className="bg-primary text-white w-1/2 py-3 rounded-full font-semibold flex justify-center items-center"
+                        >
+                            S'inscrire
+                        </Link>
+                    </div>
 
                     <Link
                         href="/listings/create"

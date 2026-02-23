@@ -1,6 +1,5 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import AppleProvider from "next-auth/providers/apple";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -12,10 +11,6 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-        }),
-        AppleProvider({
-            clientId: process.env.APPLE_ID || "",
-            clientSecret: process.env.APPLE_SECRET || "",
         }),
         CredentialsProvider({
             name: "Credentials",
@@ -42,10 +37,59 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Mot de passe incorrect");
                 }
 
-                return { id: user.id, email: user.email, name: user.phone }; // Returning phone as name for now
+                if (user.isBanned) {
+                    throw new Error("Votre compte a été banni par un administrateur.");
+                }
+
+                return { id: user.id, email: user.email, name: user.email }; // Using email as name fallback
             },
         }),
     ],
+    callbacks: {
+        async signIn({ user, account, profile }) {
+            if (user.email) {
+                let dbUser = await prisma.user.findUnique({
+                    where: { email: user.email }
+                });
+
+                // Auto-create user for Google sign-in if they don't exist
+                if (!dbUser && account?.provider === "google") {
+                    dbUser = await prisma.user.create({
+                        data: {
+                            email: user.email,
+                            role: "SEEKER",
+                        }
+                    });
+                }
+
+                // If user exists and is banned, deny sign in
+                if (dbUser && dbUser.isBanned) {
+                    throw new Error("Votre compte a été banni par un administrateur.");
+                }
+
+                // Inject database ID and role into the user object for the JWT callback
+                if (dbUser) {
+                    user.id = dbUser.id;
+                    (user as any).role = dbUser.role;
+                }
+            }
+            return true;
+        },
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+                token.role = (user as any).role;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (session?.user) {
+                (session.user as any).id = token.id;
+                (session.user as any).role = token.role;
+            }
+            return session;
+        }
+    },
     pages: {
         signIn: "/auth/signin",
     },
