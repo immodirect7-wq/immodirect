@@ -11,7 +11,7 @@ import { signIn, signOut, useSession } from "next-auth/react"; // We'll mock thi
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
-    // const { data: session } = useSession(); // Uncomment when Provider is set up
+    const { data: session, status } = useSession();
 
     return (
         <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50 h-16 transition-all duration-300">
@@ -32,21 +32,40 @@ export default function Navbar() {
 
                     {/* Auth Buttons */}
                     <div className="flex items-center gap-4 border-l border-gray-200 pl-6">
-                        <Link
-                            href="/auth/signin"
-                            className="text-slate-700 font-bold hover:text-primary transition-colors flex items-center gap-2"
-                        >
-                            <User size={18} />
-                            Se connecter
-                        </Link>
-                        <Link
-                            href="/auth/signup"
-                            className="bg-primary text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm"
-                        >
-                            S'inscrire
-                        </Link>
-                    </div>                    {/* Profile Link (Optional if logged in) */}
-                    {/* <Link href="/profile" className="..."> ... </Link> */}
+                        {status === "authenticated" ? (
+                            <>
+                                <Link
+                                    href="/profile"
+                                    className="text-slate-700 font-bold hover:text-primary transition-colors flex items-center gap-2"
+                                >
+                                    <User size={18} />
+                                    Mon Tableau de bord
+                                </Link>
+                                <button
+                                    onClick={() => signOut({ callbackUrl: '/' })}
+                                    className="text-red-500 font-bold hover:text-red-700 transition-colors text-sm"
+                                >
+                                    Déconnexion
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/auth/signin"
+                                    className="text-slate-700 font-bold hover:text-primary transition-colors flex items-center gap-2"
+                                >
+                                    <User size={18} />
+                                    Se connecter
+                                </Link>
+                                <Link
+                                    href="/auth/signup"
+                                    className="bg-primary text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                                >
+                                    S'inscrire
+                                </Link>
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 <button className="md:hidden text-text" onClick={() => setIsOpen(!isOpen)}>
@@ -57,22 +76,43 @@ export default function Navbar() {
             {/* Mobile Menu */}
             {isOpen && (
                 <div className="md:hidden bg-white border-b py-4 px-4 flex flex-col gap-4 shadow-lg absolute w-full top-16 left-0">
-                    <div className="flex gap-2 w-full">
-                        <Link
-                            href="/auth/signin"
-                            onClick={() => setIsOpen(false)}
-                            className="bg-slate-100 text-slate-800 w-1/2 py-3 rounded-full font-semibold flex justify-center items-center gap-2"
-                        >
-                            <LogIn size={18} />
-                            Connexion
-                        </Link>
-                        <Link
-                            href="/auth/signup"
-                            onClick={() => setIsOpen(false)}
-                            className="bg-primary text-white w-1/2 py-3 rounded-full font-semibold flex justify-center items-center"
-                        >
-                            S'inscrire
-                        </Link>
+                    <div className="flex flex-col gap-2 w-full">
+                        {status === "authenticated" ? (
+                            <>
+                                <Link
+                                    href="/profile"
+                                    onClick={() => setIsOpen(false)}
+                                    className="bg-slate-100 text-slate-800 w-full py-3 rounded-xl font-semibold flex justify-center items-center gap-2"
+                                >
+                                    <User size={18} />
+                                    Mon Tableau de bord
+                                </Link>
+                                <button
+                                    onClick={() => { signOut({ callbackUrl: '/' }); setIsOpen(false); }}
+                                    className="bg-red-50 text-red-600 w-full py-3 rounded-xl font-semibold flex justify-center items-center"
+                                >
+                                    Déconnexion
+                                </button>
+                            </>
+                        ) : (
+                            <div className="flex gap-2 w-full">
+                                <Link
+                                    href="/auth/signin"
+                                    onClick={() => setIsOpen(false)}
+                                    className="bg-slate-100 text-slate-800 w-1/2 py-3 rounded-xl font-semibold flex justify-center items-center gap-2"
+                                >
+                                    <LogIn size={18} />
+                                    Connexion
+                                </Link>
+                                <Link
+                                    href="/auth/signup"
+                                    onClick={() => setIsOpen(false)}
+                                    className="bg-primary text-white w-1/2 py-3 rounded-xl font-semibold flex justify-center items-center"
+                                >
+                                    S'inscrire
+                                </Link>
+                            </div>
+                        )}
                     </div>
 
                     <Link
