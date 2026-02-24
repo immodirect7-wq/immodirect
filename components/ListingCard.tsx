@@ -13,9 +13,13 @@ interface ListingCardProps {
     images: string;
     trustScore: number;
     status: string;
+    isFavorited?: boolean;
 }
 
-export default function ListingCard({ id, title, price, neighborhood, city, images, trustScore, status }: ListingCardProps) {
+import FavoriteButton from "./FavoriteButton";
+
+
+export default function ListingCard({ id, title, price, neighborhood, city, images, trustScore, status, isFavorited = false }: ListingCardProps) {
     let parsedImages: string[] = [];
     try {
         parsedImages = JSON.parse(images);
@@ -42,6 +46,11 @@ export default function ListingCard({ id, title, price, neighborhood, city, imag
                         ) : (
                             <span className="text-gray-500">En attente</span>
                         )}
+                    </div>
+
+                    {/* Favorite Button */}
+                    <div className="absolute bottom-3 right-3 z-20">
+                        <FavoriteButton listingId={id} initialFavorited={isFavorited} />
                     </div>
 
                     <div className="w-full h-full relative">

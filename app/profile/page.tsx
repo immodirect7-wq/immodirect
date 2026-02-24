@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ListingCard from "@/components/ListingCard";
+import ListingActions from "@/components/ListingActions";
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,13 @@ export default async function ProfilePage() {
         where: { email: session.user.email },
         include: {
             listings: {
+                orderBy: { createdAt: "desc" }
+            },
+            favorites: {
+                include: { listing: true },
+                orderBy: { createdAt: "desc" }
+            },
+            alerts: {
                 orderBy: { createdAt: "desc" }
             }
         }
@@ -107,7 +115,7 @@ export default async function ProfilePage() {
 
                         {user.listings.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {user.listings.map((listing) => (
+                                {user.listings.map((listing: any) => (
                                     <div key={listing.id} className="relative">
                                         <ListingCard
                                             id={listing.id}
@@ -120,10 +128,7 @@ export default async function ProfilePage() {
                                             trustScore={user.trustScore}
                                             status={listing.status}
                                         />
-                                        <div className="absolute top-2 left-2 z-20 flex gap-2">
-                                            {/* Action buttons overlay for management */}
-                                            <button className="bg-white/90 text-slate-700 px-3 py-1 rounded shadow-sm text-xs font-bold hover:bg-white">Modifier</button>
-                                        </div>
+                                        <ListingActions listingId={listing.id} currentStatus={listing.status} />
                                     </div>
                                 ))}
                             </div>
@@ -138,11 +143,73 @@ export default async function ProfilePage() {
                 {/* 3. FAVORITES TAB (SEEKER ONLY) */}
                 {user.role === "SEEKER" && (
                     <div data-tab="favorites">
-                        <h2 className="font-bold text-xl text-slate-800 mb-6">Mes Biens Favoris</h2>
-                        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500">
-                            Cette section est en cours de construction.<br />
-                            <span className="text-sm mt-2 block">Vous pourrez bientôt sauvegarder vos biens coup de coeur ici.</span>
+                        <h2 className="font-bold text-xl text-slate-800 mb-6">Mes Biens Favoris ({user.favorites.length})</h2>
+                        {user.favorites.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {user.favorites.map((fav: any) => (
+                                    <div key={fav.id} className="relative">
+                                        <ListingCard
+                                            id={fav.listing.id}
+                                            title={fav.listing.title}
+                                            description={fav.listing.description}
+                                            price={fav.listing.price}
+                                            neighborhood={fav.listing.neighborhood}
+                                            city={fav.listing.city}
+                                            images={fav.listing.images}
+                                            trustScore={user.trustScore}
+                                            status={fav.listing.status}
+                                            isFavorited={true}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500">
+                                Vous n'avez pas encore de favoris.<br />
+                                <span className="text-sm mt-2 block">Cliquez sur l'icône cœur d'une annonce pour la sauvegarder ici.</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* 4. ALERTS TAB (SEEKER ONLY) */}
+                {user.role === "SEEKER" && (
+                    <div data-tab="alerts">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="font-bold text-xl text-slate-800">Mes Alertes ({user.alerts.length})</h2>
                         </div>
+
+                        {user.alerts.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {user.alerts.map((alert: any) => (
+                                    <div key={alert.id} className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="font-bold text-lg">Recherche: {alert.city || alert.neighborhood || "Toutes zones"}</h3>
+                                                <span className={`px-2 py-1 text-xs font-bold rounded-full ${alert.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                    {alert.active ? 'Active' : 'Désactivée'}
+                                                </span>
+                                            </div>
+                                            <div className="text-gray-600 text-sm mb-4 space-y-1">
+                                                {alert.minPrice || alert.maxPrice ? (
+                                                    <p>Budget: {alert.minPrice || 0} - {alert.maxPrice || 'Max'} FCFA</p>
+                                                ) : <p>Budget: Non spécifié</p>}
+                                                {alert.bedrooms && <p>Chambres: {alert.bedrooms}</p>}
+                                            </div>
+                                        </div>
+                                        <div className="pt-3 border-t border-gray-50 flex justify-end">
+                                            {/* Note: In a full app, you would have a client component to delete alerts here */}
+                                            <button className="text-red-500 text-sm font-medium hover:text-red-700">Supprimer</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500">
+                                Vous n'avez aucune alerte active.<br />
+                                <span className="text-sm mt-2 block">Les alertes vous informent dès qu'un nouveau bien correspond à vos critères.</span>
+                            </div>
+                        )}
                     </div>
                 )}
 

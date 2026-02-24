@@ -6,18 +6,18 @@ import { CldUploadWidget } from 'next-cloudinary';
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function ListingForm() {
+export default function ListingForm({ initialData }: { initialData?: any }) {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [formData, setFormData] = useState({
-        title: "",
+        title: initialData?.title || "",
         type: "Appartement", // Default
-        description: "",
-        price: "",
-        neighborhood: "",
-        city: "Douala", // Default
-        advanceMonths: 0,
-        images: "[]",
+        description: initialData?.description || "",
+        price: initialData?.price?.toString() || "",
+        neighborhood: initialData?.neighborhood || "",
+        city: initialData?.city || "Douala",
+        advanceMonths: initialData?.advanceMonths || 0,
+        images: initialData?.images || "[]",
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -39,11 +39,30 @@ export default function ListingForm() {
         }
 
         try {
-            // 1. Create Listing (PENDING)
+            if (initialData?.id) {
+                // EDIT MODE
+                const resVal = await fetch(`/api/listings/${initialData.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData),
+                });
+
+                if (!resVal.ok) {
+                    const data = await resVal.json();
+                    throw new Error(data.message || "Erreur lors de la modification de l'annonce.");
+                }
+
+                alert("Annonce modifiée avec succès.");
+                router.push("/profile");
+                router.refresh();
+                return;
+            }
+
+            // CREATE MODE (PENDING)
             const resVal = await fetch("/api/listings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...formData, status: "PENDING" }), // Ensure backend respects PENDING or defaults to it
+                body: JSON.stringify({ ...formData, status: "PENDING" }),
             });
 
             if (!resVal.ok) {
@@ -256,7 +275,7 @@ export default function ListingForm() {
                 className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-primary/90 transition flex justify-center items-center"
             >
                 {loading && <Loader2 className="animate-spin mr-2" size={18} />}
-                {loading ? "Publication..." : "Publier l'annonce (5000 FCFA)"}
+                {loading ? "Traitement..." : initialData?.id ? "Enregistrer les modifications" : "Publier l'annonce (5000 FCFA)"}
             </button>
         </form>
     );

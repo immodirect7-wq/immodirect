@@ -25,6 +25,8 @@ model User {
   verifications Verification[]
   sentMessages  Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+  favorites     Favorite[]
+  alerts        Alert[]
 }
 
 model Listing {
@@ -45,6 +47,7 @@ model Listing {
   updatedAt    DateTime      @updatedAt
   Transaction  Transaction[]
   Message      Message[]
+  favoritedBy  Favorite[]
 }
 
 model Transaction {
@@ -96,3 +99,28 @@ model Verification {
 // TransactionStatus: PENDING, SUCCESS, FAILED
 // VerificationType: PHONE, UTILITY_BILL, SOCIAL, ID_CARD
 // VerificationStatus: PENDING, APPROVED, REJECTED
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+}
+
+model Alert {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city         String?
+  neighborhood String?
+  maxPrice     Float?
+  minPrice     Float?
+  bedrooms     Int?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
