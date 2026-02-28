@@ -267,6 +267,28 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                         maxFiles: 5,
                         resourceType: "image",
                         clientAllowedFormats: ["image"],
+                        sources: ["local", "camera"],
+                        showAdvancedOptions: false,
+                        cropping: false,
+                        multiple: true,
+                        defaultSource: "local_disk",
+                        styles: {
+                            palette: {
+                                window: "#FFFFFF",
+                                sourceBg: "#F8F8F8",
+                                windowBorder: "#D0D0D0",
+                                tabIcon: "#0E2048",
+                                inactiveTabIcon: "#555A5F",
+                                menuIcons: "#0E2048",
+                                link: "#0366D6",
+                                action: "#0366D6",
+                                inProgress: "#0366D6",
+                                complete: "#28A745",
+                                error: "#DC3545",
+                                textDark: "#000000",
+                                textLight: "#FFFFFF"
+                            }
+                        }
                     }}
                 >
                     {({ open }) => {
