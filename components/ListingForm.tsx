@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Upload, MapPin, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Upload, Loader2 } from "lucide-react";
 import { CldUploadWidget } from 'next-cloudinary';
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -12,18 +12,24 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
     const router = useRouter();
     const [formData, setFormData] = useState({
         title: initialData?.title || "",
-        type: "Appartement", // Default
+        type: "Appartement",
         description: initialData?.description || "",
         price: initialData?.price?.toString() || "",
         neighborhood: initialData?.neighborhood || "",
         city: initialData?.city || "Douala",
         advanceMonths: initialData?.advanceMonths || 0,
-        images: initialData?.images || "[]",
         latitude: initialData?.latitude || null as number | null,
         longitude: initialData?.longitude || null as number | null,
     });
+    // Track images separately with a ref AND state to avoid stale closures in Cloudinary widget
+    const [images, setImages] = useState<string[]>(() => {
+        try { return JSON.parse(initialData?.images || "[]"); } catch { return []; }
+    });
+    const imagesRef = useRef<string[]>(images);
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [paymentNote, setPaymentNote] = useState("");
     const [platformPrices, setPlatformPrices] = useState({ listing_price: 5000, pass_price: 2000 });
 
     useEffect(() => {
@@ -63,7 +69,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 const resVal = await fetch(`/api/listings/${initialData.id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify({ ...formData, images: JSON.stringify(imagesRef.current) }),
                 });
 
                 if (!resVal.ok) {
@@ -81,7 +87,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
             const resVal = await fetch("/api/listings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...formData, status: "PENDING" }),
+                body: JSON.stringify({ ...formData, images: JSON.stringify(imagesRef.current), status: "PENDING" }),
             });
 
             if (!resVal.ok) {
@@ -91,37 +97,32 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
 
             const { listing } = await resVal.json();
 
-            // 2. Initiate Payment (5000 FCFA)
-            // Use user's phone from session if available, or ask for it? 
-            // Session default user object might not have phone. 
-            // We'll prompt for phone number in a real app, but for now let's assume session user has one or use a default/input.
-            // *Better*: Add a phone input for payment if not present.
-            // For MVP simplicity, let's use a hardcoded test number or specific field.
-            // Actually, `ListingForm` doesn't ask for user phone. 
-            // Let's add a prompt or just use the one from profile.
+            // 2. Initiate Payment - non-blocking if CamPay not configured
+            if (phoneNumber) {
+                try {
+                    const paymentRes = await fetch("/api/payment/init", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            amount: platformPrices.listing_price,
+                            phone: phoneNumber,
+                            description: `Publication annonce: ${listing.title}`,
+                            listingId: listing.id
+                        }),
+                    });
 
-            const paymentRes = await fetch("/api/payment/init", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    amount: platformPrices.listing_price,
-                    phone: "237600000000", // TODO: Get real phone from user input
-                    description: `Publication annonce: ${listing.title}`,
-                    listingId: listing.id
-                }),
-            });
-
-            if (!paymentRes.ok) {
-                const errData = await paymentRes.json();
-                throw new Error(errData.message || "Erreur lors de l'initialisation du paiement.");
+                    if (paymentRes.ok) {
+                        const paymentData = await paymentRes.json();
+                        setPaymentNote(`✅ Demande de paiement envoyée ! Référence: ${paymentData.reference}. Veuillez valider sur votre téléphone.`);
+                    } else {
+                        setPaymentNote("⚠️ Votre annonce a été enregistrée mais le paiement n'a pas pu être initialisé. Contactez le support.");
+                    }
+                } catch (payErr) {
+                    setPaymentNote("⚠️ Votre annonce a été enregistrée. Merci de contacter le support pour confirmer le paiement.");
+                }
+            } else {
+                setPaymentNote("✅ Annonce enregistrée avec succès ! Elle sera visible après validation du paiement.");
             }
-
-            const paymentData = await paymentRes.json();
-            alert(`Paiement initié ! Référence: ${paymentData.reference}. Veuillez valider sur votre téléphone (Simulé: 237600000000).`);
-
-            // Success redirect
-            router.push("/");
-            router.refresh();
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -134,6 +135,24 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
 
     if (status === "loading") {
         return <div className="p-8 text-center text-gray-500">Chargement...</div>;
+    }
+
+    // If payment note is shown, the listing was created - show confirmation
+    if (paymentNote) {
+        return (
+            <div className="max-w-lg mx-auto p-8 text-center space-y-4">
+                <div className={`p-5 rounded-2xl text-sm font-medium ${paymentNote.includes('✅') ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-orange-50 text-orange-800 border border-orange-200'
+                    }`}>
+                    {paymentNote}
+                </div>
+                <button
+                    onClick={() => { router.push('/profile'); router.refresh(); }}
+                    className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                    Voir mes annonces
+                </button>
+            </div>
+        );
     }
 
     return (
@@ -236,11 +255,12 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 <CldUploadWidget
                     uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "immodirect_upload"}
                     onSuccess={(result: any) => {
-                        // Helper to add new image to state
                         const newImage = result?.info?.secure_url;
                         if (newImage) {
-                            const currentImages = formData.images ? JSON.parse(formData.images) : [];
-                            setFormData({ ...formData, images: JSON.stringify([...currentImages, newImage]) });
+                            // Use ref to avoid stale closure - always has latest images
+                            const updated = [...imagesRef.current, newImage];
+                            imagesRef.current = updated;
+                            setImages(updated);
                         }
                     }}
                     options={{
@@ -257,18 +277,29 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                             >
                                 <Upload size={24} className="mb-2" />
                                 <span>Cliquez pour ajouter des photos</span>
-                                <span className="text-xs text-gray-400 mt-1">(Max 5 photos)</span>
+                                <span className="text-xs text-gray-400 mt-1">({images.length}/5 photos)</span>
                             </div>
                         );
                     }}
                 </CldUploadWidget>
 
                 {/* Image Previews */}
-                {formData.images && JSON.parse(formData.images).length > 0 && (
+                {images.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 mt-4">
-                        {JSON.parse(formData.images).map((img: string, idx: number) => (
-                            <div key={idx} className="relative h-24 rounded-md overflow-hidden bg-gray-100 border">
+                        {images.map((img: string, idx: number) => (
+                            <div key={idx} className="relative h-24 rounded-md overflow-hidden bg-gray-100 border group">
                                 <img src={img} alt="Aperçu" className="w-full h-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const updated = images.filter((_, i) => i !== idx);
+                                        imagesRef.current = updated;
+                                        setImages(updated);
+                                    }}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    ×
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -281,6 +312,23 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                     initialLat={formData.latitude || undefined}
                     initialLng={formData.longitude || undefined}
                 />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium mb-1">
+                    N° Téléphone Mobile Money (pour le paiement)
+                </label>
+                <div className="flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-colors">
+                    <span className="bg-gray-50 px-3 py-2 text-sm text-gray-500 border-r">+237</span>
+                    <input
+                        type="tel"
+                        placeholder="600000000"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value.startsWith("237") ? e.target.value : `237${e.target.value.replace(/^0+/, '')}`)}
+                        className="flex-1 px-3 py-2 outline-none text-sm"
+                    />
+                </div>
+                <p className="text-xs text-slate-500 mt-1">MTN MoMo ou Orange Money. Requis pour valider votre publication.</p>
             </div>
 
             <button

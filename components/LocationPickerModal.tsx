@@ -25,9 +25,29 @@ interface LocationPickerProps {
 
 export default function LocationPickerModal({ onLocationSelect, initialLat, initialLng }: LocationPickerProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isLocating, setIsLocating] = useState(false);
     const [selectedPos, setSelectedPos] = useState<{ lat: number; lng: number } | null>(
         initialLat && initialLng ? { lat: initialLat, lng: initialLng } : null
     );
+    const [mapCenter, setMapCenter] = useState({ lat: initialLat || 4.0511, lng: initialLng || 9.7679 });
+
+    const openModal = () => {
+        setIsOpen(true);
+        // Auto-geolocate user when modal opens
+        if (!selectedPos && navigator.geolocation) {
+            setIsLocating(true);
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    setMapCenter({ lat: latitude, lng: longitude });
+                    setSelectedPos({ lat: latitude, lng: longitude });
+                    setIsLocating(false);
+                },
+                () => setIsLocating(false), // Silently fail if permission denied
+                { timeout: 5000 }
+            );
+        }
+    };
 
     const handleSelect = useCallback((lat: number, lng: number) => {
         setSelectedPos({ lat, lng });
@@ -44,11 +64,11 @@ export default function LocationPickerModal({ onLocationSelect, initialLat, init
         <>
             <button
                 type="button"
-                onClick={() => setIsOpen(true)}
+                onClick={openModal}
                 className={`flex items-center gap-2 font-medium text-sm transition-colors ${selectedPos ? "text-green-600 hover:text-green-700" : "text-blue-600 hover:text-blue-700"}`}
             >
                 <MapPin size={18} />
-                {selectedPos
+                {isLocating ? "Localisation en cours..." : selectedPos
                     ? `GPS: ${selectedPos.lat.toFixed(4)}, ${selectedPos.lng.toFixed(4)} ✓`
                     : "Ajouter la localisation GPS du logement"}
             </button>
@@ -74,8 +94,8 @@ export default function LocationPickerModal({ onLocationSelect, initialLat, init
                         <div className="h-[400px] relative">
                             <MapPicker
                                 onSelect={handleSelect}
-                                initialLat={selectedPos?.lat || 4.0511}
-                                initialLng={selectedPos?.lng || 9.7679}
+                                initialLat={mapCenter.lat}
+                                initialLng={mapCenter.lng}
                             />
                         </div>
 
