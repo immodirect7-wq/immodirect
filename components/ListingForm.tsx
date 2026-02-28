@@ -21,6 +21,22 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [platformPrices, setPlatformPrices] = useState({ listing_price: 5000, pass_price: 2000 });
+
+    useEffect(() => {
+        const fetchPrices = async () => {
+            try {
+                const res = await fetch("/api/admin/settings");
+                if (res.ok) {
+                    const data = await res.json();
+                    setPlatformPrices(data);
+                }
+            } catch (error) {
+                console.error("Impossible de charger les tarifs:", error);
+            }
+        };
+        fetchPrices();
+    }, []);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -85,7 +101,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    amount: 5000,
+                    amount: platformPrices.listing_price,
                     phone: "237600000000", // TODO: Get real phone from user input
                     description: `Publication annonce: ${listing.title}`,
                     listingId: listing.id
@@ -275,7 +291,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-primary/90 transition flex justify-center items-center"
             >
                 {loading && <Loader2 className="animate-spin mr-2" size={18} />}
-                {loading ? "Traitement..." : initialData?.id ? "Enregistrer les modifications" : "Publier l'annonce (5000 FCFA)"}
+                {loading ? "Traitement..." : initialData?.id ? "Enregistrer les modifications" : `Publier l'annonce (${platformPrices.listing_price} FCFA)`}
             </button>
         </form>
     );

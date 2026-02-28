@@ -124,3 +124,10 @@ model Alert {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model PlatformSetting {
+  id        String   @id // e.g., "listing_price", "pass_price"
+  value     Float
+  updatedAt DateTime @updatedAt
+}
+

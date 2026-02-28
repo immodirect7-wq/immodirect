@@ -38,6 +38,25 @@ export async function POST(req: Request) {
             );
         }
 
+        // Verify Amount against Platform Settings
+        let expectedAmount = parseFloat(amount);
+        const settings = await prisma.platformSetting.findMany();
+        const config: Record<string, number> = { listing_price: 5000, pass_price: 2000 };
+        settings.forEach((s: any) => config[s.id] = s.value);
+
+        if (reason === "LISTING_FEE" || listingId) {
+            expectedAmount = config.listing_price;
+        } else if (reason === "PASS") {
+            expectedAmount = config.pass_price;
+        }
+
+        if (parseFloat(amount) !== expectedAmount) {
+            return NextResponse.json(
+                { message: `Montant invalide. Le montant attendu est de ${expectedAmount} FCFA.` },
+                { status: 400 }
+            );
+        }
+
         // Create Transaction (PENDING)
         const reference = `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const transaction = await prisma.transaction.create({

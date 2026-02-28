@@ -39,6 +39,11 @@ export default async function ProfilePage() {
         return <div className="p-8 text-center">Utilisateur introuvable.</div>;
     }
 
+    // Fetch dynamic pricing
+    const settings = await prisma.platformSetting.findMany();
+    const config: Record<string, number> = { listing_price: 5000, pass_price: 2000 };
+    settings.forEach((s) => config[s.id] = s.value);
+
     return (
         <div className="container mx-auto p-4 max-w-4xl min-h-[calc(100vh-64px)]">
             <h1 className="text-3xl font-bold mb-8 text-slate-800">Tableau de bord</h1>
@@ -95,7 +100,7 @@ export default async function ProfilePage() {
                                         Pour voir en illimité les numéros de téléphone des propriétaires, activez votre Pass Visite.
                                     </p>
                                     <button className="bg-primary hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-lg transition-colors">
-                                        Activer le Pass (2000 FCFA / mois)
+                                        Activer le Pass ({config.pass_price} FCFA / mois)
                                     </button>
                                 </div>
                             )}
@@ -103,42 +108,40 @@ export default async function ProfilePage() {
                     )}
                 </div>
 
-                {/* 2. LISTINGS TAB (OWNER ONLY) */}
-                {user.role === "OWNER" && (
-                    <div data-tab="listings">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="font-bold text-xl text-slate-800">Mes Annonces ({user.listings.length})</h2>
-                            <a href="/listings/new" className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors text-sm">
-                                + Nouvelle Annonce
-                            </a>
-                        </div>
-
-                        {user.listings.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {user.listings.map((listing: any) => (
-                                    <div key={listing.id} className="relative">
-                                        <ListingCard
-                                            id={listing.id}
-                                            title={listing.title}
-                                            description={listing.description}
-                                            price={listing.price}
-                                            neighborhood={listing.neighborhood}
-                                            city={listing.city}
-                                            images={listing.images}
-                                            trustScore={user.trustScore}
-                                            status={listing.status}
-                                        />
-                                        <ListingActions listingId={listing.id} currentStatus={listing.status} />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500">
-                                Vous n'avez pas encore publié d'annonce.
-                            </div>
-                        )}
+                {/* 2. LISTINGS TAB (ALL USERS) */}
+                <div data-tab="listings">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="font-bold text-xl text-slate-800">Mes Annonces ({user.listings.length})</h2>
+                        <a href="/listings/new" className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors text-sm">
+                            + Nouvelle Annonce
+                        </a>
                     </div>
-                )}
+
+                    {user.listings.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {user.listings.map((listing: any) => (
+                                <div key={listing.id} className="relative">
+                                    <ListingCard
+                                        id={listing.id}
+                                        title={listing.title}
+                                        description={listing.description}
+                                        price={listing.price}
+                                        neighborhood={listing.neighborhood}
+                                        city={listing.city}
+                                        images={listing.images}
+                                        trustScore={user.trustScore}
+                                        status={listing.status}
+                                    />
+                                    <ListingActions listingId={listing.id} currentStatus={listing.status} />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-12 text-center text-slate-500">
+                            Vous n'avez pas encore publié d'annonce.
+                        </div>
+                    )}
+                </div>
 
                 {/* 3. FAVORITES TAB (SEEKER ONLY) */}
                 {user.role === "SEEKER" && (

@@ -3,7 +3,8 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Users, AlertTriangle, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, AlertTriangle, ArrowLeft, Home, DollarSign, LogOut } from "lucide-react";
+import React from "react"; // Import React for React.cloneElement
 
 export default async function AdminLayout({
     children,
@@ -24,6 +25,14 @@ export default async function AdminLayout({
         redirect("/"); // Kick non-admins out
     }
 
+    const navItems = [
+        { name: "Tableau de Bord", href: "/admin", icon: <LayoutDashboard size={20} /> },
+        { name: "Utilisateurs", href: "/admin/users", icon: <Users size={20} /> },
+        { name: "Annonces", href: "/admin/listings", icon: <Home size={20} /> },
+        { name: "Tarification", href: "/admin/settings", icon: <DollarSign size={20} /> },
+        { name: "Signaux & Alertes", href: "/admin/reports", icon: <AlertTriangle size={20} /> },
+    ];
+
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
             {/* Sidebar */}
@@ -34,20 +43,16 @@ export default async function AdminLayout({
                 </div>
 
                 <nav className="space-y-2">
-                    <Link
-                        href="/admin"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition-colors"
-                    >
-                        <LayoutDashboard size={20} className="text-slate-400" />
-                        <span className="font-medium">Statistiques</span>
-                    </Link>
-                    <Link
-                        href="/admin/users"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition-colors"
-                    >
-                        <Users size={20} className="text-slate-400" />
-                        <span className="font-medium">Utilisateurs</span>
-                    </Link>
+                    {navItems.map((item) => (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                        >
+                            {item.icon}
+                            <span className="font-medium">{item.name}</span>
+                        </Link>
+                    ))}
                 </nav>
 
                 <div className="mt-12 pt-6 border-t border-slate-800">
@@ -67,6 +72,6 @@ export default async function AdminLayout({
                     {children}
                 </div>
             </main>
-        </div>
+        </div >
     );
 }
