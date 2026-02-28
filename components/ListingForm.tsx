@@ -5,6 +5,7 @@ import { Upload, MapPin, Loader2 } from "lucide-react";
 import { CldUploadWidget } from 'next-cloudinary';
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import LocationPickerModal from "./LocationPickerModal";
 
 export default function ListingForm({ initialData }: { initialData?: any }) {
     const { data: session, status } = useSession();
@@ -18,6 +19,8 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
         city: initialData?.city || "Douala",
         advanceMonths: initialData?.advanceMonths || 0,
         images: initialData?.images || "[]",
+        latitude: initialData?.latitude || null as number | null,
+        longitude: initialData?.longitude || null as number | null,
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -273,16 +276,11 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
             </div>
 
             <div className="space-y-2">
-                <button
-                    type="button"
-                    className="flex items-center gap-2 text-blue-600 font-medium"
-                >
-                    <MapPin size={18} />
-                    Ajouter la localisation du logement/terrain
-                </button>
-                <p className="text-xs text-orange-600 italic">
-                    Note : Il est vivement recommandé d'ajouter cette localisation pour aider les visiteurs à vous trouver.
-                </p>
+                <LocationPickerModal
+                    onLocationSelect={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
+                    initialLat={formData.latitude || undefined}
+                    initialLng={formData.longitude || undefined}
+                />
             </div>
 
             <button

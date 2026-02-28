@@ -28,11 +28,26 @@ export default async function AdminListingsPage() {
         include: { owner: true }
     });
 
+    const paidCount = listings.filter(l => l.status === "PAID").length;
+    const pendingCount = listings.filter(l => l.status === "PENDING").length;
+    const expiredCount = listings.filter(l => l.status === "EXPIRED").length;
+
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden min-h-full">
             <div className="p-6 border-b border-slate-100">
                 <h2 className="text-xl font-bold text-slate-800">Toutes les Annonces ({listings.length})</h2>
                 <p className="text-gray-500 text-sm mt-1">Supervisez et modérez les publications de la plateforme.</p>
+                <div className="flex gap-4 mt-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                        <span className="font-black">{paidCount}</span> Payées
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
+                        <span className="font-black">{pendingCount}</span> En attente
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                        <span className="font-black">{expiredCount}</span> Expirées
+                    </span>
+                </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -72,8 +87,8 @@ export default async function AdminListingsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${listing.status === "PAID" ? "bg-green-100 text-green-700" :
-                                                listing.status === "EXPIRED" ? "bg-red-100 text-red-700" :
-                                                    "bg-orange-100 text-orange-700"
+                                            listing.status === "EXPIRED" ? "bg-red-100 text-red-700" :
+                                                "bg-orange-100 text-orange-700"
                                             }`}>
                                             {listing.status === "PAID" && <CheckCircle size={14} />}
                                             {listing.status === "EXPIRED" && <AlertTriangle size={14} />}

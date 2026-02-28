@@ -11,7 +11,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         }
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user || user.role !== "OWNER") return NextResponse.json({ message: "Propriétaire introuvable" }, { status: 403 });
+        if (!user) return NextResponse.json({ message: "Utilisateur introuvable" }, { status: 403 });
 
         const listing = await prisma.listing.findUnique({ where: { id: params.id } });
         if (!listing || listing.ownerId !== user.id) return NextResponse.json({ message: "Annonce introuvable ou accès refusé" }, { status: 404 });
@@ -45,7 +45,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         }
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user || user.role !== "OWNER") return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
+        if (!user) return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
 
         const listing = await prisma.listing.findUnique({ where: { id: params.id } });
         if (!listing || listing.ownerId !== user.id) return NextResponse.json({ message: "Annonce introuvable ou accès refusé" }, { status: 404 });
@@ -72,7 +72,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         }
 
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-        if (!user || user.role !== "OWNER") return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
+        if (!user) return NextResponse.json({ message: "Accès refusé" }, { status: 403 });
 
         const listing = await prisma.listing.findUnique({ where: { id: params.id } });
         if (!listing || listing.ownerId !== user.id) return NextResponse.json({ message: "Annonce introuvable ou accès refusé" }, { status: 404 });
