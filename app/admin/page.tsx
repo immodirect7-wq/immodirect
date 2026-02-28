@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { Users, Home, TrendingUp, ShieldAlert } from "lucide-react";
+import { Users, Home, TrendingUp, ShieldAlert, Eye } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +13,10 @@ export default async function AdminDashboardPage() {
     const seekersCount = await prisma.user.count({ where: { role: "SEEKER" } });
     const bannedCount = await prisma.user.count({ where: { isBanned: true } });
     const paidListings = await prisma.listing.count({ where: { status: "PAID" } });
+    const totalPageViews = await prisma.pageView.count();
+    const todayViews = await prisma.pageView.count({
+        where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } }
+    });
 
     return (
         <div>
@@ -51,6 +55,18 @@ export default async function AdminDashboardPage() {
                     <div>
                         <p className="text-slate-500 text-sm font-medium">Annonces Payées</p>
                         <p className="text-3xl font-bold text-slate-900 mt-1">{paidListings}</p>
+                    </div>
+                </div>
+
+                {/* Stat Card 4 - Visitors */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-start gap-4">
+                    <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                        <Eye size={24} />
+                    </div>
+                    <div>
+                        <p className="text-slate-500 text-sm font-medium">Visiteurs (Pages vues)</p>
+                        <p className="text-3xl font-bold text-slate-900 mt-1">{totalPageViews}</p>
+                        <p className="text-xs text-slate-400 mt-1">+{todayViews} aujourd'hui</p>
                     </div>
                 </div>
 

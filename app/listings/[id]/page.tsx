@@ -32,6 +32,13 @@ export default async function ListingPage({ params }: ListingPageProps) {
         notFound();
     }
 
+    // Record page view (fire-and-forget)
+    await prisma.pageView.create({ data: { path: `/listings/${params.id}` } }).catch(() => { });
+
+    // Check free_contact platform setting
+    const freeContactSetting = await prisma.platformSetting.findUnique({ where: { id: "free_contact" } });
+    const isFreeContact = freeContactSetting ? freeContactSetting.value === 1 : false;
+
     if (session && session.user?.email) {
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
@@ -39,11 +46,13 @@ export default async function ListingPage({ params }: ListingPageProps) {
 
         if (user) {
             userPhone = user.phone || "";
-            // Check 1: Active Pass
-            if (user.hasActivePass && user.passExpiry && user.passExpiry > new Date()) {
+            // If free contact mode is on, everyone is unlocked
+            if (isFreeContact) {
+                isUnlocked = true;
+            } else if (user.hasActivePass && user.passExpiry && user.passExpiry > new Date()) {
                 isUnlocked = true;
             } else {
-                // Check 2: Single Unlock Transaction
+                // Check: Single Unlock Transaction
                 const unlockTransaction = await prisma.transaction.findFirst({
                     where: {
                         userId: user.id,

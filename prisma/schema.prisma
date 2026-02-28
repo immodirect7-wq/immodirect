@@ -126,8 +126,14 @@ model Alert {
 }
 
 model PlatformSetting {
-  id        String   @id // e.g., "listing_price", "pass_price"
+  id        String   @id // e.g., "listing_price", "pass_price", "free_contact"
   value     Float
   updatedAt DateTime @updatedAt
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String   // e.g., "/listings/abc123"
+  createdAt DateTime @default(now())
 }
 

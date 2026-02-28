@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { User, Menu, X, PlusCircle, LogIn } from "lucide-react";
+import { User, Menu, X, PlusCircle, LogIn, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react"; // We'll mock this behavior first or wrap in provider
 
@@ -34,6 +34,15 @@ export default function Navbar() {
                     <div className="flex items-center gap-4 border-l border-gray-200 pl-6">
                         {status === "authenticated" ? (
                             <>
+                                {(session?.user as any)?.role === "ADMIN" && (
+                                    <Link
+                                        href="/admin"
+                                        className="text-orange-600 font-bold hover:text-orange-800 transition-colors flex items-center gap-1.5 text-sm bg-orange-50 px-3 py-1.5 rounded-lg"
+                                    >
+                                        <ShieldAlert size={16} />
+                                        Admin
+                                    </Link>
+                                )}
                                 <Link
                                     href="/profile"
                                     className="text-slate-700 font-bold hover:text-primary transition-colors flex items-center gap-2"
@@ -79,6 +88,16 @@ export default function Navbar() {
                     <div className="flex flex-col gap-2 w-full">
                         {status === "authenticated" ? (
                             <>
+                                {(session?.user as any)?.role === "ADMIN" && (
+                                    <Link
+                                        href="/admin"
+                                        onClick={() => setIsOpen(false)}
+                                        className="bg-orange-50 text-orange-700 w-full py-3 rounded-xl font-semibold flex justify-center items-center gap-2"
+                                    >
+                                        <ShieldAlert size={18} />
+                                        Admin Console
+                                    </Link>
+                                )}
                                 <Link
                                     href="/profile"
                                     onClick={() => setIsOpen(false)}

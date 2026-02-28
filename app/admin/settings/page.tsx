@@ -5,7 +5,7 @@ import { Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function PlatformSettings() {
-    const [prices, setPrices] = useState({ listing_price: 0, pass_price: 0 });
+    const [prices, setPrices] = useState<{ listing_price: number; pass_price: number; free_contact?: number }>({ listing_price: 0, pass_price: 0, free_contact: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
@@ -75,7 +75,7 @@ export default function PlatformSettings() {
                         <label className="block text-sm font-bold text-slate-700 mb-2">
                             Prix de Publication d'une Annonce (FCFA)
                         </label>
-                        <p className="text-xs text-slate-500 mb-2">Montant payé par les propriétaires ("OWNER") ou chercheurs pour mettre un bien en ligne.</p>
+                        <p className="text-xs text-slate-500 mb-2">Montant payé par les propriétaires ou chercheurs pour mettre un bien en ligne.</p>
                         <div className="relative">
                             <input
                                 type="number"
@@ -93,7 +93,7 @@ export default function PlatformSettings() {
                         <label className="block text-sm font-bold text-slate-700 mb-2">
                             Prix du Pass Visite (FCFA / Mois)
                         </label>
-                        <p className="text-xs text-slate-500 mb-2">Montant payé par les locataires ("SEEKER") pour voir les numéros de téléphone des propriétaires en illimité.</p>
+                        <p className="text-xs text-slate-500 mb-2">Montant payé par les locataires pour accéder aux contacts des propriétaires en illimité.</p>
                         <div className="relative">
                             <input
                                 type="number"
@@ -105,6 +105,30 @@ export default function PlatformSettings() {
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">FCFA</span>
                         </div>
+                    </div>
+
+                    {/* Free Contact Toggle */}
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <label className="text-sm font-bold text-slate-700">Déblocage des contacts gratuit</label>
+                                <p className="text-xs text-slate-500 mt-0.5">
+                                    Si activé, tous les utilisateurs connectés peuvent voir le numéro de téléphone des propriétaires gratuitement.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setPrices({ ...prices, free_contact: prices.free_contact ? 0 : 1 })}
+                                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${prices.free_contact ? 'bg-green-500' : 'bg-slate-300'
+                                    }`}
+                            >
+                                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${prices.free_contact ? 'translate-x-8' : 'translate-x-1'
+                                    }`} />
+                            </button>
+                        </div>
+                        <p className={`text-xs mt-2 font-medium ${prices.free_contact ? 'text-green-600' : 'text-slate-400'}`}>
+                            {prices.free_contact ? '✅ Contacts gratuits — actif' : '🔒 Contacts payants — actif'}
+                        </p>
                     </div>
                 </div>
 
