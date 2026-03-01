@@ -10,6 +10,7 @@ interface ContactActionProps {
     listingId: string;
     listingTitle: string;
     userPhone: string;
+    passPrice: number;  // 0 = accès gratuit aux contacts
 }
 
 export default function ContactAction({
@@ -18,6 +19,7 @@ export default function ContactAction({
     listingId,
     listingTitle,
     userPhone,
+    passPrice,
 }: ContactActionProps) {
     const [showPhone, setShowPhone] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -26,7 +28,6 @@ export default function ContactAction({
     const initiatePayment = async (amount: number, description: string) => {
         if (!userPhone) {
             alert("Veuillez remplir votre profil avec un numéro de téléphone pour payer.");
-            // In real app, prompt for phone here if missing
             return;
         }
 
@@ -41,7 +42,7 @@ export default function ContactAction({
                     amount,
                     phone: userPhone,
                     description,
-                    listingId: amount === 500 ? listingId : undefined, // Attach listingId only for single unlock
+                    listingId: amount === 500 ? listingId : undefined,
                     reason: amount === 500 ? "SINGLE_UNLOCK" : "MONTHLY_PASS"
                 }),
             });
@@ -54,9 +55,6 @@ export default function ContactAction({
             const data = await res.json();
             alert(`Paiement initié ! Référence: ${data.reference}. Validez sur votre mobile.`);
 
-            // In a real app we'd poll for status or listen to websocket
-            // For now, let's just reload after a delay or let user reload
-
         } catch (error: any) {
             alert(error.message);
         } finally {
@@ -64,7 +62,8 @@ export default function ContactAction({
         }
     };
 
-    if (isUnlocked) {
+    // Mode gratuit : accès contact direct pour tous
+    if (passPrice === 0 || isUnlocked) {
         return (
             <div className="flex flex-col gap-3 mt-4">
                 <button
@@ -75,7 +74,7 @@ export default function ContactAction({
                     {showPhone ? ownerPhone : "Afficher le numéro"}
                 </button>
                 <p className="text-center text-sm text-green-600 font-medium">
-                    Contact accessible (Payé/Inclus)
+                    Contact accessible gratuitement
                 </p>
             </div>
         );
@@ -105,7 +104,7 @@ export default function ContactAction({
 
                 {/* Monthly Pass Option */}
                 <button
-                    onClick={() => initiatePayment(2000, "Pass Mensuel ImmoDirect")}
+                    onClick={() => initiatePayment(passPrice, "Pass Mensuel ImmoDirect")}
                     disabled={loading}
                     className="flex flex-col items-center justify-center gap-1 bg-blue-600 text-white py-3 px-2 rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg"
                 >
@@ -113,7 +112,7 @@ export default function ContactAction({
                         <>
                             <div className="flex items-center gap-2 font-bold">
                                 <Lock size={18} />
-                                2 000 FCFA
+                                {passPrice.toLocaleString()} FCFA
                             </div>
                             <span className="text-xs text-blue-100">Pass Illimité (1 mois)</span>
                         </>

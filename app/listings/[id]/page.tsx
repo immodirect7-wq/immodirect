@@ -39,6 +39,10 @@ export default async function ListingPage({ params }: ListingPageProps) {
     const freeContactSetting = await prisma.platformSetting.findUnique({ where: { id: "free_contact" } });
     const isFreeContact = freeContactSetting ? freeContactSetting.value === 1 : false;
 
+    // Get pass_price for ContactAction
+    const passPriceSetting = await prisma.platformSetting.findUnique({ where: { id: "pass_price" } });
+    const passPrice = passPriceSetting ? passPriceSetting.value : 2000;
+
     if (session && session.user?.email) {
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
@@ -116,7 +120,8 @@ export default async function ListingPage({ params }: ListingPageProps) {
                     ownerPhone={listing.owner.phone || ""}
                     listingId={listing.id}
                     listingTitle={listing.title}
-                    userPhone={userPhone} // Pass user phone for payment init
+                    userPhone={userPhone}
+                    passPrice={passPrice}
                 />
                 <ReportButton listingId={listing.id} />
             </div>

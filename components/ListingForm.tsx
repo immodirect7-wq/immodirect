@@ -97,6 +97,18 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
 
             const { listing } = await resVal.json();
 
+            // If price is 0 (free mode), auto-publish immediately without payment
+            if (platformPrices.listing_price === 0) {
+                // Mark listing as PAID directly
+                await fetch(`/api/listings/${listing.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: "PAID" }),
+                });
+                setPaymentNote("✅ Annonce publiée gratuitement ! Elle est maintenant visible sur la plateforme.");
+                return;
+            }
+
             // 2. Initiate Payment - non-blocking if CamPay not configured
             if (phoneNumber) {
                 try {
@@ -336,22 +348,24 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 />
             </div>
 
-            <div>
-                <label className="block text-sm font-medium mb-1">
-                    N° Téléphone Mobile Money (pour le paiement)
-                </label>
-                <div className="flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-colors">
-                    <span className="bg-gray-50 px-3 py-2 text-sm text-gray-500 border-r">+237</span>
-                    <input
-                        type="tel"
-                        placeholder="600000000"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value.startsWith("237") ? e.target.value : `237${e.target.value.replace(/^0+/, '')}`)}
-                        className="flex-1 px-3 py-2 outline-none text-sm"
-                    />
+            {platformPrices.listing_price > 0 && (
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        N° Téléphone Mobile Money (pour le paiement)
+                    </label>
+                    <div className="flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-colors">
+                        <span className="bg-gray-50 px-3 py-2 text-sm text-gray-500 border-r">+237</span>
+                        <input
+                            type="tel"
+                            placeholder="600000000"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value.startsWith("237") ? e.target.value : `237${e.target.value.replace(/^0+/, '')}`)}
+                            className="flex-1 px-3 py-2 outline-none text-sm"
+                        />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">MTN MoMo ou Orange Money. Requis pour valider votre publication.</p>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">MTN MoMo ou Orange Money. Requis pour valider votre publication.</p>
-            </div>
+            )}
 
             <button
                 type="submit"
@@ -359,7 +373,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-primary/90 transition flex justify-center items-center"
             >
                 {loading && <Loader2 className="animate-spin mr-2" size={18} />}
-                {loading ? "Traitement..." : initialData?.id ? "Enregistrer les modifications" : `Publier l'annonce (${platformPrices.listing_price} FCFA)`}
+                {loading ? "Traitement..." : initialData?.id ? "Enregistrer les modifications" : platformPrices.listing_price === 0 ? "Publier l'annonce gratuitement" : `Publier l'annonce (${platformPrices.listing_price} FCFA)`}
             </button>
         </form>
     );
