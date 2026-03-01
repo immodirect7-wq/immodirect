@@ -25,6 +25,10 @@ export async function POST(req: Request) {
             city,
             type,
             advanceMonths,
+            images,
+            latitude,
+            longitude,
+            status: bodyStatus,
         } = body;
 
         if (!title || !description || !price || !neighborhood || !city || !type) {
@@ -44,6 +48,18 @@ export async function POST(req: Request) {
                 { message: "Utilisateur introuvable." },
                 { status: 404 }
             );
+        }
+
+        // Validate images JSON string
+        let imagesStr = "[]";
+        if (images) {
+            try {
+                // Accept both array and JSON string
+                const parsed = typeof images === "string" ? JSON.parse(images) : images;
+                imagesStr = JSON.stringify(Array.isArray(parsed) ? parsed : []);
+            } catch {
+                imagesStr = "[]";
+            }
         }
 
         // Create Listing
@@ -67,8 +83,10 @@ export async function POST(req: Request) {
                 // Better: I'll just save it as part of the description or handle it client side.
                 // Let's go with: description = `Type: ${type}\n\n${description}`
                 ownerId: user.id,
-                status: "PAID", // Default to PAID for demo visibility
-                images: "[]", // Default empty array for images
+                status: bodyStatus || "PENDING",
+                images: imagesStr,
+                latitude: latitude ? parseFloat(latitude) : null,
+                longitude: longitude ? parseFloat(longitude) : null,
             },
         });
 

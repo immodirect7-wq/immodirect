@@ -26,11 +26,26 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
         try { return JSON.parse(initialData?.images || "[]"); } catch { return []; }
     });
     const imagesRef = useRef<string[]>(images);
-    const [phoneNumber, setPhoneNumber] = useState("");
+    const [contactPhone, setContactPhone] = useState(""); // Numéro de contact du propriétaire (obligatoire)
+    const [phoneNumber, setPhoneNumber] = useState(""); // Numéro Mobile Money (paiement) - optionnel si prix > 0
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [paymentNote, setPaymentNote] = useState("");
     const [platformPrices, setPlatformPrices] = useState({ listing_price: 5000, pass_price: 2000 });
+
+    // Pre-fill contact phone from user profile
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await fetch("/api/profile");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data?.phone) setContactPhone(data.phone);
+                }
+            } catch { /* silent */ }
+        };
+        fetchProfile();
+    }, []);
 
     useEffect(() => {
         const fetchPrices = async () => {
@@ -60,6 +75,13 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
 
         if (!session) {
             router.push("/auth/signin");
+            return;
+        }
+
+        // Validate contact phone
+        if (!contactPhone || contactPhone.replace(/\D/g, "").length < 9) {
+            setError("Veuillez entrer un numéro de téléphone de contact valide.");
+            setLoading(false);
             return;
         }
 
@@ -346,6 +368,27 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                     initialLat={formData.latitude || undefined}
                     initialLng={formData.longitude || undefined}
                 />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium mb-1">
+                    N° Téléphone de contact <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-colors">
+                    <span className="bg-gray-50 px-3 py-2 text-sm text-gray-500 border-r">+237</span>
+                    <input
+                        type="tel"
+                        placeholder="600000000"
+                        value={contactPhone.replace(/^237/, "")}
+                        onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, "");
+                            setContactPhone(`237${raw}`);
+                        }}
+                        className="flex-1 px-3 py-2 outline-none text-sm"
+                        required
+                    />
+                </div>
+                <p className="text-xs text-slate-500 mt-1">Ce numéro sera communiqué aux locataires intéressés.</p>
             </div>
 
             {platformPrices.listing_price > 0 && (

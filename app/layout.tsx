@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-// import { Toaster } from "@/components/ui/toaster"; // Will add later
 import Navbar from "@/components/Navbar";
 import GdprBanner from "@/components/GdprBanner";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
+import PageTransition from "@/components/PageTransition";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,11 +25,12 @@ export default function RootLayout({
                 <Providers>
                     <Navbar />
                     <main className="min-h-screen bg-background">
-                        {children}
+                        <PageTransition>
+                            {children}
+                        </PageTransition>
                     </main>
                     <Footer />
                     <GdprBanner />
-                    {/* <Toaster /> */}
                 </Providers>
             </body>
         </html>
