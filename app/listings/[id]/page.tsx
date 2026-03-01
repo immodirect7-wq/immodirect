@@ -117,7 +117,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
                 <h2 className="font-semibold mb-4">Contact</h2>
                 <ContactAction
                     isUnlocked={isUnlocked}
-                    ownerPhone={listing.owner.phone || ""}
+                    ownerPhone={listing.contactPhone || listing.owner.phone || ""}
                     listingId={listing.id}
                     listingTitle={listing.title}
                     userPhone={userPhone}
