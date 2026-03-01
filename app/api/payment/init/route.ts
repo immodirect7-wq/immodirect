@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { requestPayment } from "@/lib/campay";
-
-const prisma = new PrismaClient();
+import { checkRateLimit, getClientIdentifier, rateLimitResponse } from "@/lib/rateLimit";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
+    // Rate limit: max 10 payment requests per minute per IP
+    const clientId = getClientIdentifier(req, "payment");
+    const limit = checkRateLimit(clientId, { windowMs: 60_000, maxRequests: 10 });
+    if (!limit.allowed) return rateLimitResponse(limit.resetIn);
+
     try {
         const session = await getServerSession(authOptions);
 
@@ -58,7 +63,7 @@ export async function POST(req: Request) {
         }
 
         // Create Transaction (PENDING)
-        const reference = `REF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const reference = `REF-${crypto.randomUUID()}`;
         const transaction = await prisma.transaction.create({
             data: {
                 amount: parseFloat(amount),

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { checkTransactionStatus } from "@/lib/campay";
+import { checkRateLimit, getClientIdentifier, rateLimitResponse } from "@/lib/rateLimit";
 
 const prisma = new PrismaClient();
 
@@ -10,17 +12,25 @@ interface CampayWebhookData {
     amount: number;
     currency: string;
     external_reference: string;
-    // ... other fields
 }
 
 export async function POST(req: Request) {
+    // Rate limit webhooks: max 30 per minute per IP
+    const clientId = getClientIdentifier(req, "webhook");
+    const limit = checkRateLimit(clientId, { windowMs: 60_000, maxRequests: 30 });
+    if (!limit.allowed) return rateLimitResponse(limit.resetIn);
+
     try {
         const body: CampayWebhookData = await req.json();
         console.log("Campay Webhook Received:", body);
 
         const { status, external_reference } = body;
 
-        // Verify transaction exists
+        if (!external_reference) {
+            return NextResponse.json({ message: "Missing reference" }, { status: 400 });
+        }
+
+        // Verify transaction exists in our DB
         const transaction = await prisma.transaction.findUnique({
             where: { reference: external_reference },
             include: { listing: true, user: true }
@@ -31,30 +41,41 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Transaction not found" }, { status: 404 });
         }
 
+        // Skip already-processed transactions (idempotency)
+        if (transaction.status !== "PENDING") {
+            return NextResponse.json({ received: true, message: "Already processed" });
+        }
+
+        // 🔒 SECURITY: Verify the transaction status directly with CamPay API
+        // Do NOT trust the webhook payload alone
+        let verifiedStatus = status;
+        try {
+            const campayVerification = await checkTransactionStatus(external_reference);
+            if (campayVerification && campayVerification.status) {
+                verifiedStatus = campayVerification.status === "SUCCESSFUL" ? "SUCCESSFUL" : "FAILED";
+            }
+        } catch (verifyErr) {
+            console.error("CamPay verification failed, falling back to webhook data:", verifyErr);
+            // If CamPay API is down, reject the webhook for safety
+            return NextResponse.json({ message: "Unable to verify transaction" }, { status: 503 });
+        }
+
         // Update Transaction Status
-        if (status === "SUCCESSFUL") {
+        if (verifiedStatus === "SUCCESSFUL") {
             await prisma.transaction.update({
                 where: { id: transaction.id },
                 data: { status: "SUCCESS" }
             });
 
             // Business Logic based on what was paid for
-            // 1. If listingId exists, it might be a "Boost" or "Publication Fee"
             if (transaction.listingId) {
-                // If the listing was PENDING, mark as PAID
                 if (transaction.listing?.status !== "PAID") {
                     await prisma.listing.update({
                         where: { id: transaction.listingId! },
                         data: { status: "PAID" }
                     });
                 }
-            }
-            // 2. If no listingId, it might be a "Visit Pass" or "Unlock Contact"
-            else {
-                // Check transaction amount/desc to determine provided service
-                // Logic for unlocking contact: 
-                // Maybe we create a 'Verification' or 'Access' record?
-                // For now, simpler: user.hasActivePass = true (for 2000 FCFA)
+            } else {
                 if (transaction.amount >= 2000) {
                     await prisma.user.update({
                         where: { id: transaction.userId },
@@ -64,10 +85,6 @@ export async function POST(req: Request) {
                         }
                     });
                 }
-                // For 500 FCFA unlock, we generally need to store WHICH listing was unlocked.
-                // Schema doesn't have `UnlockedListings`. 
-                // MVP Solution: If 500 FCFA, just log it for now or assume immediate client-side unlock access?
-                // Real Solution: New model `UnlockedContact` { userId, listingId }
             }
         } else {
             await prisma.transaction.update({

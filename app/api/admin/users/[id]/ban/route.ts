@@ -49,6 +49,6 @@ export async function POST(
 
     } catch (error: any) {
         console.error("Ban API Error:", error);
-        return NextResponse.json({ message: "Erreur serveur : " + error.message }, { status: 500 });
+        return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
     }
 }
