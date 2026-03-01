@@ -29,6 +29,7 @@ export async function POST(req: Request) {
             latitude,
             longitude,
             status: bodyStatus,
+            contactPhone,
         } = body;
 
         if (!title || !description || !price || !neighborhood || !city || !type) {
@@ -54,8 +55,11 @@ export async function POST(req: Request) {
         let imagesStr = "[]";
         if (images) {
             try {
-                // Accept both array and JSON string
-                const parsed = typeof images === "string" ? JSON.parse(images) : images;
+                let parsed = images;
+                // Deal with double stringified JSON (e.g. '"[\"url\"]"')
+                while (typeof parsed === "string") {
+                    parsed = JSON.parse(parsed);
+                }
                 imagesStr = JSON.stringify(Array.isArray(parsed) ? parsed : []);
             } catch {
                 imagesStr = "[]";
@@ -85,6 +89,7 @@ export async function POST(req: Request) {
                 ownerId: user.id,
                 status: bodyStatus || "PENDING",
                 images: imagesStr,
+                contactPhone: contactPhone || null,
                 latitude: latitude ? parseFloat(latitude) : null,
                 longitude: longitude ? parseFloat(longitude) : null,
             },

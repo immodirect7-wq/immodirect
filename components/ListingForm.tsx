@@ -91,7 +91,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 const resVal = await fetch(`/api/listings/${initialData.id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ...formData, images: JSON.stringify(imagesRef.current) }),
+                    body: JSON.stringify({ ...formData, images: JSON.stringify(imagesRef.current), contactPhone }),
                 });
 
                 if (!resVal.ok) {
@@ -109,7 +109,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
             const resVal = await fetch("/api/listings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...formData, images: JSON.stringify(imagesRef.current), status: "PENDING" }),
+                body: JSON.stringify({ ...formData, images: JSON.stringify(imagesRef.current), contactPhone, status: "PENDING" }),
             });
 
             if (!resVal.ok) {

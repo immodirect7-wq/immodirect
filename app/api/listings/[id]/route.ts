@@ -17,7 +17,22 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         if (!listing || listing.ownerId !== user.id) return NextResponse.json({ message: "Annonce introuvable ou accès refusé" }, { status: 404 });
 
         const body = await req.json();
-        const { title, description, price, city, neighborhood, advanceMonths } = body;
+        const { title, description, price, city, neighborhood, advanceMonths, images, contactPhone } = body;
+
+        // Validate images JSON string
+        let imagesStr = "[]";
+        if (images) {
+            try {
+                let parsed = images;
+                // Deal with double stringified JSON (e.g. '"[\"url\"]"')
+                while (typeof parsed === "string") {
+                    parsed = JSON.parse(parsed);
+                }
+                imagesStr = JSON.stringify(Array.isArray(parsed) ? parsed : []);
+            } catch {
+                imagesStr = "[]";
+            }
+        }
 
         const updatedListing = await prisma.listing.update({
             where: { id: params.id },
@@ -28,6 +43,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
                 city,
                 neighborhood,
                 advanceMonths: parseInt(advanceMonths),
+                images: imagesStr,
+                contactPhone: contactPhone || undefined,
             }
         });
 

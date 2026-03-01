@@ -3,7 +3,7 @@ import ContactAction from "@/components/ContactAction";
 import TrustBadge from "@/components/TrustBadge";
 import ReportButton from "@/components/ReportButton";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import ImageCarousel from "@/components/ImageCarousel";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -72,27 +72,27 @@ export default async function ListingPage({ params }: ListingPageProps) {
     }
 
     // Parse images
-    let images = [];
+    let images: string[] = [];
     try {
         images = JSON.parse(listing.images);
     } catch (e) {
         images = []; // Fallback
     }
 
-    // Use dummy image if array is empty or fails
-    const mainImage = images.length > 0 ? images[0] : "/placeholder-house.jpg";
-
     return (
         <div className="container mx-auto px-4 py-6 max-w-2xl">
             <div className="relative h-64 w-full bg-gray-200 rounded-lg overflow-hidden mb-4">
-                {/* Display Image */}
-                <Image
-                    src={mainImage}
-                    alt={listing.title}
-                    fill
-                    className="object-cover"
-                />
-                <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-sm font-bold">
+                {/* Display Images */}
+                {images.length > 0 ? (
+                    <ImageCarousel images={images} title={listing.title} />
+                ) : (
+                    <div className="w-full h-full relative">
+                        <div className="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-400">
+                            <span>Aucune image disponible</span>
+                        </div>
+                    </div>
+                )}
+                <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-sm font-bold z-10">
                     {listing.status === "PAID" ? "En ligne" : "En attente"}
                 </div>
             </div>

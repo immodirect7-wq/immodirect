@@ -8,105 +8,93 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  phone         String?   @unique
-  email         String?   @unique
-  password      String?
-  role          String    @default("SEEKER") // OWNER, SEEKER, ADMIN
-  trustScore    Int       @default(0)
-  hasActivePass Boolean   @default(false)
-  passExpiry    DateTime?
-  isBanned      Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  listings      Listing[]
-  transactions  Transaction[]
-  verifications Verification[]
-  sentMessages  Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  favorites     Favorite[]
-  alerts        Alert[]
+  id               String         @id @default(cuid())
+  phone            String?        @unique
+  email            String?        @unique
+  password         String?
+  role             String         @default("SEEKER")
+  trustScore       Int            @default(0)
+  hasActivePass    Boolean        @default(false)
+  passExpiry       DateTime?
+  isBanned         Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  alerts           Alert[]
+  favorites        Favorite[]
+  listings         Listing[]
+  receivedMessages Message[]      @relation("ReceivedMessages")
+  sentMessages     Message[]      @relation("SentMessages")
+  transactions     Transaction[]
+  verifications    Verification[]
 }
 
 model Listing {
-  id           String        @id @default(cuid())
-  title        String
-  description  String
-  price        Float
-  advanceMonths Int        @default(0)
-  neighborhood String
-  city         String
-  latitude     Float?
-  longitude    Float?
-  images       String // Store component images as JSON string or comma-separated
-  status       String        @default("PENDING") // PENDING, PAID, EXPIRED
-  ownerId      String
-  owner        User          @relation(fields: [ownerId], references: [id])
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  Transaction  Transaction[]
-  Message      Message[]
-  favoritedBy  Favorite[]
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  price         Float
+  advanceMonths Int           @default(0)
+  neighborhood  String
+  city          String
+  latitude      Float?
+  longitude     Float?
+  images        String // Store component images as JSON string or comma-separated
+  contactPhone  String? // Numéro de téléphone de contact du propriétaire
+  status        String        @default("PENDING") // PENDING, PAID, EXPIRED
+  ownerId       String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  favoritedBy   Favorite[]
+  owner         User          @relation(fields: [ownerId], references: [id])
+  Message       Message[]
+  Transaction   Transaction[]
 }
 
 model Transaction {
-  id        String            @id @default(cuid())
+  id        String   @id @default(cuid())
   amount    Float
-  provider  String            // MTN, ORANGE, CASH
-  status    String            @default("PENDING") // PENDING, SUCCESS, FAILED
-  reference String            @unique
+  provider  String
+  status    String   @default("PENDING")
+  reference String   @unique
   userId    String
-  user      User              @relation(fields: [userId], references: [id])
   listingId String?
-  listing   Listing?          @relation(fields: [listingId], references: [id])
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  listing   Listing? @relation(fields: [listingId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  content     String
-  isRead      Boolean  @default(false)
-  
-  senderId    String
-  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
-  
-  receiverId  String
-  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  
-  listingId   String?
-  listing     Listing? @relation(fields: [listingId], references: [id])
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  content    String
+  isRead     Boolean  @default(false)
+  senderId   String
+  receiverId String
+  listingId  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  listing    Listing? @relation(fields: [listingId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
 }
 
 model Verification {
-  id        String             @id @default(cuid())
-  type      String             // PHONE, UTILITY_BILL, SOCIAL, ID_CARD
-  status    String             @default("PENDING") // PENDING, APPROVED, REJECTED
+  id        String   @id @default(cuid())
+  type      String
+  status    String   @default("PENDING")
   userId    String
-  user      User               @relation(fields: [userId], references: [id])
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
 }
-
-// Enums are not supported in SQLite, so we use String
-// Role: OWNER, SEEKER, ADMIN
-// ListingStatus: PENDING, PAID, EXPIRED
-// PaymentProvider: MTN, ORANGE, CASH
-// TransactionStatus: PENDING, SUCCESS, FAILED
-// VerificationType: PHONE, UTILITY_BILL, SOCIAL, ID_CARD
-// VerificationStatus: PENDING, APPROVED, REJECTED
 
 model Favorite {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   listingId String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, listingId])
 }
@@ -114,7 +102,6 @@ model Favorite {
 model Alert {
   id           String   @id @default(cuid())
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   city         String?
   neighborhood String?
   maxPrice     Float?
@@ -123,17 +110,17 @@ model Alert {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PlatformSetting {
-  id        String   @id // e.g., "listing_price", "pass_price", "free_contact"
+  id        String   @id
   value     Float
   updatedAt DateTime @updatedAt
 }
 
 model PageView {
   id        String   @id @default(cuid())
-  path      String   // e.g., "/listings/abc123"
+  path      String
   createdAt DateTime @default(now())
 }
-
