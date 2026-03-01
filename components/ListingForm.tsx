@@ -298,7 +298,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                         }
                     }}
                     options={{
-                        maxFiles: 5,
+                        maxFiles: 10,
                         resourceType: "image",
                         clientAllowedFormats: ["image"],
                         sources: ["local", "camera"],
@@ -333,7 +333,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                             >
                                 <Upload size={24} className="mb-2" />
                                 <span>Cliquez pour ajouter des photos</span>
-                                <span className="text-xs text-gray-400 mt-1">({images.length}/5 photos)</span>
+                                <span className="text-xs text-gray-400 mt-1">({images.length}/10 photos)</span>
                             </div>
                         );
                     }}
