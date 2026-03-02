@@ -5,8 +5,8 @@ import { Filter } from "lucide-react";
 import ClientSidebarWrapper from "@/components/ClientSidebarWrapper"; // To handle client-side state
 import Hero from "@/components/Hero";
 
-// Ensure dynamic rendering for listings
-export const dynamic = 'force-dynamic';
+// Revalidate every 60 seconds (ISR) — pages are served instantly from cache
+export const revalidate = 60;
 
 export default async function Home() {
     let listings: any[] = [];

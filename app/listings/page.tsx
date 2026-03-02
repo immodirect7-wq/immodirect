@@ -13,7 +13,8 @@ const Map = nextDynamic(() => import("@/components/Map"), {
     )
 });
 
-export const dynamic = "force-dynamic";
+// Revalidate every 30 seconds (ISR) — search results cached per URL
+export const revalidate = 30;
 
 interface ListingsPageProps {
     searchParams: { [key: string]: string | string[] | undefined };
