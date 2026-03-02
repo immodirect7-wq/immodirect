@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    output: "standalone", // Vercel 50MB Serverless Function workaround
     images: {
         domains: ['res.cloudinary.com'],
     },
