@@ -17,7 +17,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         if (!listing || listing.ownerId !== user.id) return NextResponse.json({ message: "Annonce introuvable ou accès refusé" }, { status: 404 });
 
         const body = await req.json();
-        const { title, description, price, city, neighborhood, advanceMonths, images, contactPhone } = body;
+        const { title, description, price, city, neighborhood, advanceMonths, images, contactPhone, propertyType, surface } = body;
 
         // Validate images JSON string
         let imagesStr = "[]";
@@ -45,7 +45,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
                 advanceMonths: parseInt(advanceMonths),
                 images: imagesStr,
                 contactPhone: contactPhone || undefined,
-            }
+                propertyType: propertyType || undefined,
+                surface: propertyType === 'Boutique' ? parseInt(surface) : (surface ? parseInt(surface) : null),
+            } as any
         });
 
         return NextResponse.json({ message: "Annonce modifiée", listing: updatedListing }, { status: 200 });

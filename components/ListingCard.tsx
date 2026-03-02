@@ -13,13 +13,15 @@ interface ListingCardProps {
     images: string;
     trustScore: number;
     status: string;
+    propertyType?: string;
+    surface?: number | null;
     isFavorited?: boolean;
 }
 
 import FavoriteButton from "./FavoriteButton";
 
 
-export default function ListingCard({ id, title, price, neighborhood, city, images, trustScore, status, isFavorited = false }: ListingCardProps) {
+export default function ListingCard({ id, title, price, neighborhood, city, images, trustScore, status, propertyType, surface, isFavorited = false }: ListingCardProps) {
     let parsedImages: string[] = [];
     try {
         parsedImages = JSON.parse(images);
@@ -68,8 +70,12 @@ export default function ListingCard({ id, title, price, neighborhood, city, imag
                     </div>
 
                     <div className="flex items-center text-gray-500 text-sm mb-4">
-                        <MapPin size={16} className="mr-1 text-primary" />
-                        {neighborhood}, {city}
+                        <MapPin size={16} className="mr-1 text-primary shrink-0" />
+                        <span className="line-clamp-1">
+                            {propertyType ? <span className="font-medium text-gray-700">{propertyType} • </span> : ""}
+                            {neighborhood}, {city}
+                            {surface ? <span className="text-gray-500"> • {surface} m²</span> : ""}
+                        </span>
                     </div>
 
                     <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">

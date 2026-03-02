@@ -58,6 +58,8 @@ export default async function Home() {
                                     images={listing.images}
                                     trustScore={0} // Default for now, fetch owner if needed
                                     status={listing.status}
+                                    propertyType={listing.propertyType}
+                                    surface={listing.surface}
                                 />
                             ))
                         ) : (

@@ -28,9 +28,11 @@ export async function POST(req: Request) {
             longitude,
             status: bodyStatus,
             contactPhone,
+            propertyType,
+            surface,
         } = body;
 
-        if (!title || !description || !price || !neighborhood || !city || !type) {
+        if (!title || !description || !price || !neighborhood || !city || !propertyType) {
             return NextResponse.json(
                 { message: "Tous les champs obligatoires doivent être remplis." },
                 { status: 400 }
@@ -73,17 +75,9 @@ export async function POST(req: Request) {
                 advanceMonths: parseInt(advanceMonths) || 0,
                 neighborhood,
                 city,
-                // Using `type` as part of description or separate field if added to schema?
-                // Schema doesn't have `type`, let's append it to description or add it.
-                // For now, keep it simple, append to description.
-                // Ideally should update schema for `type`, but to avoid migration friction now:
-                // *Wait*, adding `type` to schema is better practice. Let's do it or map it.
-                // I will append it to description for this speed run if schema update is risky/slow.
-                // Actually, listing type is important. Let's check schema again. 
-                // Schema: title, description, price, advanceMonths, neighborhood, city... no `type`.
-                // I will append "[Type: X]" to the description for now to avoid migration overhead unless critical.
-                // Better: I'll just save it as part of the description or handle it client side.
-                // Let's go with: description = `Type: ${type}\n\n${description}`
+                // Using `propertyType` as the official field now instead of appending to description
+                propertyType: propertyType || "LIVING", // Default fallback if needed
+                surface: propertyType === 'Boutique' ? parseInt(surface) : (surface ? parseInt(surface) : null), // Ensure it's an int and prioritized for Boutiques
                 ownerId: user.id,
                 status: bodyStatus || "PENDING",
                 images: imagesStr,

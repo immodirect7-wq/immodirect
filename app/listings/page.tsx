@@ -94,6 +94,8 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
                                 images={listing.images}
                                 trustScore={listing.owner?.trustScore || 0}
                                 status={listing.status}
+                                propertyType={listing.propertyType}
+                                surface={listing.surface}
                             />
                         ))}
                     </div>

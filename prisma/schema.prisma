@@ -40,6 +40,8 @@ model Listing {
   longitude     Float?
   images        String // Store component images as JSON string or comma-separated
   contactPhone  String? // Numéro de téléphone de contact du propriétaire
+  propertyType  String        @default("LIVING") // LIVING, BOUTIQUE, OFFICE
+  surface       Int?          // Surface in sq meters (optional, required for boutique)
   status        String        @default("PENDING") // PENDING, PAID, EXPIRED
   ownerId       String
   createdAt     DateTime      @default(now())

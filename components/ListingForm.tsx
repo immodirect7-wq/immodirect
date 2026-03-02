@@ -12,7 +12,8 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
     const router = useRouter();
     const [formData, setFormData] = useState({
         title: initialData?.title || "",
-        type: "Appartement",
+        propertyType: initialData?.propertyType || "Appartement",
+        surface: initialData?.surface || "",
         description: initialData?.description || "",
         price: initialData?.price?.toString() || "",
         neighborhood: initialData?.neighborhood || "",
@@ -165,7 +166,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
     };
 
     const cities = ['Douala', 'Yaoundé', 'Bafoussam', 'Kribi', 'Garoua', 'Maroua', 'Bamenda', 'Buea', 'Limbe', 'Ebolowa', 'Ngaoundéré', 'Bertoua'];
-    const types = ['Appartement', 'Maison', 'Studio', 'Chambre', 'Terrain'];
+    const types = ['Appartement', 'Maison', 'Boutique', 'Studio', 'Chambre', 'Terrain', 'Bureau'];
 
     if (status === "loading") {
         return <div className="p-8 text-center text-gray-500">Chargement...</div>;
@@ -212,14 +213,28 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                     <label className="block text-sm font-medium mb-1">Type de bien</label>
                     <select
                         className="w-full border rounded-lg p-2"
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                        value={formData.propertyType}
+                        onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
                     >
                         {types.map((type) => (
                             <option key={type} value={type}>{type}</option>
                         ))}
                     </select>
                 </div>
+                {formData.propertyType === 'Boutique' && (
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Superficie (m²)</label>
+                        <input
+                            type="number"
+                            min="1"
+                            className="w-full border rounded-lg p-2"
+                            value={formData.surface}
+                            onChange={(e) => setFormData({ ...formData, surface: e.target.value })}
+                            required={formData.propertyType === 'Boutique'}
+                            placeholder="ex: 25"
+                        />
+                    </div>
+                )}
                 <div>
                     <label className="block text-sm font-medium mb-1">Prix (FCFA / mois)</label>
                     <input
