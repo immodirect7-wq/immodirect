@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     experimental: {
-        optimizePackageImports: ['@prisma/client', 'lucide-react', 'framer-motion'],
+        serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+        optimizePackageImports: ['lucide-react', 'framer-motion'],
     },
     images: {
         domains: ['res.cloudinary.com'],
