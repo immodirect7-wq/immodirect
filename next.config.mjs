@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: "standalone", // Vercel 50MB Serverless Function workaround
+    experimental: {
+        optimizePackageImports: ['@prisma/client', 'lucide-react', 'framer-motion'],
+    },
     images: {
         domains: ['res.cloudinary.com'],
     },
