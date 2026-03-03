@@ -17,14 +17,14 @@ export default function Navbar() {
         <nav className="absolute top-0 w-full z-50 py-4 transition-all duration-300">
             <div className="container mx-auto px-4 flex items-center justify-between lg:justify-center">
 
-                {/* Desktop Centered Links */}
-                <div className="hidden lg:flex items-center space-x-8 text-sm font-semibold text-slate-900 tracking-wide">
-                    <Link href="/" className="flex items-center mr-2 hover:opacity-80 transition-opacity">
-                        <Image src="/logo.png" alt="ImmoDirect Logo" width={36} height={36} className="object-contain" />
+                {/* Left Side: Logo + Accueil (Visible on both Mobile & Desktop) */}
+                <div className="flex items-center gap-4">
+                    <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+                        <Image src="/logo.png" alt="ImmoDirect Logo" width={50} height={50} className="object-contain w-10 h-10 lg:w-[50px] lg:h-[50px]" />
                     </Link>
-                    <Link href="/" className="hover:text-[#7bc043] transition-colors">ACCUEIL</Link>
-                    <Link href="/listings" className="hover:text-[#7bc043] transition-colors">TROUVER UN BIEN</Link>
-                    <Link href="/publish" className="hover:text-[#7bc043] transition-colors">LOUER UN BIEN</Link>
+                    <Link href="/" className="font-bold text-[#0f3b5e] hover:text-[#7bc043] transition-colors text-sm lg:text-base tracking-wide">
+                        ACCUEIL
+                    </Link>
                 </div>
 
                 {/* Optional Subtle Auth/Admin Actions (Right aligned absolutely if needed) */}
@@ -45,9 +45,8 @@ export default function Navbar() {
                     )}
                 </div>
 
-                {/* Mobile Menu Toggle */}
-                <div className="lg:hidden w-full flex justify-between items-center">
-                    <span className="font-bold text-lg text-[#0f3b5e]">Menu</span>
+                {/* Mobile Menu Toggle (Right Side) */}
+                <div className="lg:hidden flex items-center">
                     <button className="text-[#0f3b5e]" onClick={() => setIsOpen(!isOpen)}>
                         {isOpen ? <X size={28} /> : <Menu size={28} />}
                     </button>
