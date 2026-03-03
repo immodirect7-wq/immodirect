@@ -20,10 +20,7 @@ export default function Navbar() {
                 <div className="hidden lg:flex items-center space-x-8 text-sm font-semibold text-slate-900 tracking-wide">
                     <Link href="/" className="hover:text-[#7bc043] transition-colors">ACCUEIL</Link>
                     <Link href="/listings" className="hover:text-[#7bc043] transition-colors">TROUVER UN BIEN</Link>
-                    <Link href="/publish" className="hover:text-[#7bc043] transition-colors">VENDRE UN BIEN</Link>
                     <Link href="/publish" className="hover:text-[#7bc043] transition-colors">LOUER UN BIEN</Link>
-                    <Link href="/services" className="hover:text-[#7bc043] transition-colors">NOS SERVICES</Link>
-                    <Link href="/contact" className="hover:text-[#7bc043] transition-colors">CONTACT</Link>
                 </div>
 
                 {/* Optional Subtle Auth/Admin Actions (Right aligned absolutely if needed) */}

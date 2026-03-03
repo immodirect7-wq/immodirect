@@ -7,7 +7,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Hero() {
-    const [activeTab, setActiveTab] = useState<"louer" | "acheter">("louer");
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
 
@@ -31,8 +30,8 @@ export default function Hero() {
                 <div className="flex flex-col lg:flex-row items-center justify-between flex-1 gap-12 lg:gap-8">
 
                     {/* Left Column: Text & CTA */}
-                    <div className="w-full lg:w-[60%] flex flex-col items-start text-left space-y-6">
-                        <h1 className="text-4xl sm:text-5xl lg:text-[4.5rem] font-black leading-[1.1] tracking-tight">
+                    <div className="w-full lg:w-[80%] xl:w-[70%] flex flex-col items-start text-left space-y-6 mx-auto lg:mx-0">
+                        <h1 className="text-4xl sm:text-5xl lg:text-[5rem] font-black leading-[1.1] tracking-tight">
                             <span className="text-[#0f3b5e]">Trouvez, </span>
                             <span className="text-[#7bc043]">vendez ou</span><br />
                             <span className="text-[#7bc043]">louez</span>
@@ -45,50 +44,33 @@ export default function Hero() {
                             L'immobilier en direct au Cameroun.
                         </p>
 
-                        <button className="bg-[#7bc043] hover:bg-[#68a834] text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg transition-transform hover:scale-105 mt-4">
-                            Visitez le Site
-                        </button>
-                    </div>
-
-                    {/* Right Column: Logo */}
-                    <div className="w-full lg:w-[40%] flex justify-center lg:justify-end items-center hidden md:flex">
-                        <div className="relative w-[300px] h-[150px] lg:w-[450px] lg:h-[200px] drop-shadow-2xl">
-                            <Image
-                                src="/logo.png"
-                                alt="ImmoDirect Logo"
-                                fill
-                                className="object-contain"
-                                priority
-                            />
+                        <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                            <Link
+                                href="/listings"
+                                className="bg-[#7bc043] hover:bg-[#68a834] text-white text-lg sm:text-xl font-bold py-4 px-8 rounded-full shadow-lg transition-transform hover:scale-105 text-center flex-1 sm:flex-none"
+                            >
+                                Trouver un logement
+                            </Link>
+                            <Link
+                                href="/listings/create"
+                                className="bg-white text-[#0f3b5e] border-2 border-[#0f3b5e] hover:bg-[#0f3b5e] hover:text-white text-lg sm:text-xl font-bold py-4 px-8 rounded-full shadow-lg transition-all hover:scale-105 text-center flex-1 sm:flex-none"
+                            >
+                                Publier une annonce
+                            </Link>
                         </div>
                     </div>
                 </div>
 
-                {/* Search Box - Moved below the main typography to respect the mockup */}
-                <div className="w-full max-w-5xl mx-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden mt-16 border border-white/20">
-                    <div className="flex border-b border-gray-100">
-                        <button
-                            onClick={() => setActiveTab("louer")}
-                            className={`flex-1 py-4 text-center font-bold text-lg transition-colors ${activeTab === "louer" ? "text-primary border-b-4 border-primary bg-blue-50/30" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"}`}
-                        >
-                            Louer
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("acheter")}
-                            className={`flex-1 py-4 text-center font-bold text-lg transition-colors ${activeTab === "acheter" ? "text-primary border-b-4 border-primary bg-blue-50/30" : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"}`}
-                        >
-                            Acheter
-                        </button>
-                    </div>
-
+                {/* Search Box - Simplified */}
+                <div className="w-full max-w-4xl mx-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden mt-16 border border-white/20">
                     <form
                         className="p-4 md:p-6 flex flex-col md:flex-row gap-4"
                         onSubmit={(e) => {
                             e.preventDefault();
                             if (searchQuery.trim()) {
-                                router.push(`/listings?q=${encodeURIComponent(searchQuery)}&type=${activeTab}`);
+                                router.push(`/listings?q=${encodeURIComponent(searchQuery)}`);
                             } else {
-                                router.push(`/listings?type=${activeTab}`);
+                                router.push(`/listings`);
                             }
                         }}
                     >
