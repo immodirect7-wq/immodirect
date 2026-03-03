@@ -70,9 +70,20 @@ export async function POST(req: Request) {
             // Business Logic based on what was paid for
             if (transaction.listingId) {
                 if (transaction.listing?.status !== "PAID") {
+                    const settings = await prisma.platformSetting.findUnique({
+                        where: { id: "listing_duration_days" }
+                    });
+                    const durationDays = settings?.value || 30;
+
+                    const expiresAt = new Date();
+                    expiresAt.setDate(expiresAt.getDate() + durationDays);
+
                     await prisma.listing.update({
                         where: { id: transaction.listingId! },
-                        data: { status: "PAID" }
+                        data: {
+                            status: "PAID",
+                            expiresAt
+                        } as any
                     });
                 }
             } else {

@@ -43,6 +43,7 @@ model Listing {
   propertyType  String        @default("LIVING") // LIVING, BOUTIQUE, OFFICE
   surface       Int?          // Surface in sq meters (optional, required for boutique)
   status        String        @default("PENDING") // PENDING, PAID, EXPIRED
+  expiresAt     DateTime?     // Date when the listing expires and should be hidden
   ownerId       String
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt

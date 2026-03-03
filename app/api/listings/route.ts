@@ -66,6 +66,18 @@ export async function POST(req: Request) {
             }
         }
 
+        // Fetch listing duration setting
+        const settings = await prisma.platformSetting.findUnique({
+            where: { id: "listing_duration_days" }
+        });
+        const durationDays = settings?.value || 30; // Default to 30 days if not set
+
+        let expiresAt: Date | null = null;
+        if (bodyStatus === "PAID") {
+            expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationDays);
+        }
+
         // Create Listing
         const listing = await prisma.listing.create({
             data: {
@@ -80,11 +92,12 @@ export async function POST(req: Request) {
                 surface: propertyType === 'Boutique' ? parseInt(surface) : (surface ? parseInt(surface) : null), // Ensure it's an int and prioritized for Boutiques
                 ownerId: user.id,
                 status: bodyStatus || "PENDING",
+                expiresAt,
                 images: imagesStr,
                 contactPhone: contactPhone || null,
                 latitude: latitude ? parseFloat(latitude) : null,
                 longitude: longitude ? parseFloat(longitude) : null,
-            },
+            } as any,
         });
 
         return NextResponse.json(

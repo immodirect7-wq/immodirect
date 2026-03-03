@@ -5,7 +5,7 @@ import { Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function PlatformSettings() {
-    const [prices, setPrices] = useState<{ listing_price: number; pass_price: number; free_contact?: number }>({ listing_price: 0, pass_price: 0, free_contact: 0 });
+    const [prices, setPrices] = useState<{ listing_price: number; pass_price: number; free_contact?: number; listing_duration_days?: number }>({ listing_price: 0, pass_price: 0, free_contact: 0, listing_duration_days: 30 });
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
@@ -104,6 +104,24 @@ export default function PlatformSettings() {
                                 required
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">FCFA</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">
+                            Durée d'une Annonce (Jours)
+                        </label>
+                        <p className="text-xs text-slate-500 mb-2">Combien de temps une annonce reste-t-elle visible sur la plateforme avant d'expirer ?</p>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                min="1"
+                                value={prices.listing_duration_days}
+                                onChange={(e) => setPrices({ ...prices, listing_duration_days: parseInt(e.target.value) || 30 })}
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors pr-16"
+                                required
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">Jours</span>
                         </div>
                     </div>
 

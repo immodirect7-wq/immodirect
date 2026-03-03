@@ -27,6 +27,10 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
     // Build the query
     const whereClause: any = {
         status: "PAID",
+        OR: [
+            { expiresAt: { gt: new Date() } },
+            { expiresAt: null }
+        ]
     };
 
     if (query) {

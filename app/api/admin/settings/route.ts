@@ -6,7 +6,9 @@ import { authOptions } from "@/lib/auth";
 // Default prices
 const DEFAULT_PRICES: Record<string, number> = {
     listing_price: 5000,
-    pass_price: 2000
+    pass_price: 2000,
+    free_contact: 0,
+    listing_duration_days: 30
 };
 
 export async function GET() {
@@ -40,7 +42,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { listing_price, pass_price } = body;
+        const { listing_price, pass_price, free_contact, listing_duration_days } = body;
 
         // Update or Create settings
         if (listing_price !== undefined) {
@@ -56,6 +58,22 @@ export async function POST(req: Request) {
                 where: { id: "pass_price" },
                 update: { value: parseFloat(pass_price) },
                 create: { id: "pass_price", value: parseFloat(pass_price) }
+            });
+        }
+
+        if (free_contact !== undefined) {
+            await prisma.platformSetting.upsert({
+                where: { id: "free_contact" },
+                update: { value: parseFloat(free_contact) },
+                create: { id: "free_contact", value: parseFloat(free_contact) }
+            });
+        }
+
+        if (listing_duration_days !== undefined) {
+            await prisma.platformSetting.upsert({
+                where: { id: "listing_duration_days" },
+                update: { value: parseFloat(listing_duration_days) },
+                create: { id: "listing_duration_days", value: parseFloat(listing_duration_days) }
             });
         }
 

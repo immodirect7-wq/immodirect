@@ -15,7 +15,11 @@ export default async function Home() {
         listings = await prisma.listing.findMany({
             where: {
                 status: "PAID",
-            },
+                OR: [
+                    { expiresAt: { gt: new Date() } },
+                    { expiresAt: null }
+                ]
+            } as any,
             orderBy: {
                 createdAt: "desc",
             },
