@@ -24,25 +24,47 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
     const query = typeof searchParams.q === "string" ? searchParams.q : "";
     const type = typeof searchParams.type === "string" ? searchParams.type : "louer";
 
+    const propertyTypes = typeof searchParams.propertyType === "string" ? searchParams.propertyType.split(",") : [];
+    const citiesFilter = typeof searchParams.cities === "string" ? searchParams.cities.split(",") : [];
+    const minPrice = typeof searchParams.minPrice === "string" ? parseInt(searchParams.minPrice) : null;
+    const maxPrice = typeof searchParams.maxPrice === "string" ? parseInt(searchParams.maxPrice) : null;
+
     // Build the query
     const whereClause: any = {
         status: "PAID",
-        OR: [
-            { expiresAt: { gt: new Date() } },
-            { expiresAt: null }
+        AND: [
+            {
+                OR: [
+                    { expiresAt: { gt: new Date() } },
+                    { expiresAt: null }
+                ]
+            }
         ]
     };
 
     if (query) {
-        whereClause.OR = [
-            { city: { contains: query, mode: "insensitive" } },
-            { neighborhood: { contains: query, mode: "insensitive" } },
-        ];
+        whereClause.AND.push({
+            OR: [
+                { city: { contains: query, mode: "insensitive" } },
+                { neighborhood: { contains: query, mode: "insensitive" } },
+            ]
+        });
     }
 
-    // Note: We are currently ignoring the "type" parameter in the DB query since your schema 
-    // doesn't seem to explicitly separate "Rent" or "Buy" fields, but it's captured from the UI 
-    // for future extensions.
+    if (propertyTypes.length > 0) {
+        whereClause.AND.push({ propertyType: { in: propertyTypes } });
+    }
+
+    if (citiesFilter.length > 0) {
+        whereClause.AND.push({ city: { in: citiesFilter } });
+    }
+
+    if (minPrice !== null || maxPrice !== null) {
+        const priceFilter: any = {};
+        if (minPrice !== null) priceFilter.gte = minPrice;
+        if (maxPrice !== null) priceFilter.lte = maxPrice;
+        whereClause.AND.push({ price: priceFilter });
+    }
 
     let listings: any[] = [];
     try {

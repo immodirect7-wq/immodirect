@@ -13,14 +13,16 @@ export default function ClientSidebarWrapper({ mobileTrigger }: ClientSidebarWra
 
     if (mobileTrigger) {
         return (
-            <button
-                onClick={() => setIsOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm text-sm font-medium hover:bg-gray-50"
-            >
-                <Filter size={16} />
-                Filtres
+            <>
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm text-sm font-medium hover:bg-gray-50"
+                >
+                    <Filter size={16} />
+                    Filtres
+                </button>
                 <Sidebar isOpen={isOpen} onClose={() => setIsOpen(false)} />
-            </button>
+            </>
         );
     }
 
