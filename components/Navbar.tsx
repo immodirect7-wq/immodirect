@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { User, Menu, X, ShieldAlert, LogIn } from "lucide-react";
 import { useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react"; // We'll mock this behavior first or wrap in provider
@@ -18,6 +19,9 @@ export default function Navbar() {
 
                 {/* Desktop Centered Links */}
                 <div className="hidden lg:flex items-center space-x-8 text-sm font-semibold text-slate-900 tracking-wide">
+                    <Link href="/" className="flex items-center mr-2 hover:opacity-80 transition-opacity">
+                        <Image src="/logo.png" alt="ImmoDirect Logo" width={36} height={36} className="object-contain" />
+                    </Link>
                     <Link href="/" className="hover:text-[#7bc043] transition-colors">ACCUEIL</Link>
                     <Link href="/listings" className="hover:text-[#7bc043] transition-colors">TROUVER UN BIEN</Link>
                     <Link href="/publish" className="hover:text-[#7bc043] transition-colors">LOUER UN BIEN</Link>

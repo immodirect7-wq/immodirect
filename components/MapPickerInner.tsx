@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import { useState, useEffect } from "react";
 import L from "leaflet";
 
@@ -21,6 +21,17 @@ function ClickHandler({ onSelect }: { onSelect: (lat: number, lng: number) => vo
     return null;
 }
 
+function InvalidateSize() {
+    const map = useMap();
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 250);
+        return () => clearTimeout(timer);
+    }, [map]);
+    return null;
+}
+
 interface MapPickerInnerProps {
     onSelect: (lat: number, lng: number) => void;
     initialLat: number;
@@ -38,12 +49,13 @@ export default function MapPickerInner({ onSelect, initialLat, initialLng }: Map
     return (
         <MapContainer
             center={[initialLat, initialLng]}
-            zoom={13}
+            zoom={15}
             style={{ width: "100%", height: "100%" }}
         >
+            <InvalidateSize />
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution="&copy; Google Maps"
+                url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
             />
             <ClickHandler onSelect={handleClick} />
             {markerPos && <Marker position={[markerPos.lat, markerPos.lng]} />}

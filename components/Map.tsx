@@ -59,8 +59,8 @@ export default function Map({ listings }: MapProps) {
                 style={{ height: '100%', width: '100%', zIndex: 0 }}
             >
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    attribution="&copy; Google Maps"
+                    url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
                 />
                 {validListings.map((listing) => {
                     let imageUrl = "/placeholder-house.jpg";
