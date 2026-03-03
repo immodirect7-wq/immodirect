@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { User, Menu, X, PlusCircle, LogIn, ShieldAlert } from "lucide-react";
+import { User, Menu, X, ShieldAlert, LogIn } from "lucide-react";
 import { useState } from "react";
 import { signIn, signOut, useSession } from "next-auth/react"; // We'll mock this behavior first or wrap in provider
 
@@ -14,72 +13,44 @@ export default function Navbar() {
     const { data: session, status } = useSession();
 
     return (
-        <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50 h-16 transition-all duration-300">
-            <div className="container mx-auto px-4 h-full flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-3 font-bold text-2xl text-slate-800 hover:text-primary transition-colors">
-                    <Image src="/logo.png" alt="ImmoDirect Logo" width={40} height={40} className="object-contain" />
-                    <span>ImmoDirect</span>
-                </Link>
+        <nav className="absolute top-0 w-full z-50 py-4 transition-all duration-300">
+            <div className="container mx-auto px-4 flex items-center justify-between lg:justify-center">
 
-                <div className="hidden md:flex items-center gap-6">
-                    <Link
-                        href="/listings/create"
-                        className="bg-white text-primary border border-primary hover:bg-blue-50 transition-colors px-6 py-2.5 rounded-lg font-bold flex items-center gap-2"
-                    >
-                        <PlusCircle size={18} />
-                        Publier une annonce
-                    </Link>
-
-                    {/* Auth Buttons */}
-                    <div className="flex items-center gap-4 border-l border-gray-200 pl-6">
-                        {status === "authenticated" ? (
-                            <>
-                                {(session?.user as any)?.role === "ADMIN" && (
-                                    <Link
-                                        href="/admin"
-                                        className="text-orange-600 font-bold hover:text-orange-800 transition-colors flex items-center gap-1.5 text-sm bg-orange-50 px-3 py-1.5 rounded-lg"
-                                    >
-                                        <ShieldAlert size={16} />
-                                        Admin
-                                    </Link>
-                                )}
-                                <Link
-                                    href="/profile"
-                                    className="text-slate-700 font-bold hover:text-primary transition-colors flex items-center gap-2"
-                                >
-                                    <User size={18} />
-                                    Mon Tableau de bord
-                                </Link>
-                                <button
-                                    onClick={() => signOut({ callbackUrl: '/' })}
-                                    className="text-red-500 font-bold hover:text-red-700 transition-colors text-sm"
-                                >
-                                    Déconnexion
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <Link
-                                    href="/auth/signin"
-                                    className="text-slate-700 font-bold hover:text-primary transition-colors flex items-center gap-2"
-                                >
-                                    <User size={18} />
-                                    Se connecter
-                                </Link>
-                                <Link
-                                    href="/auth/signup"
-                                    className="bg-primary text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm"
-                                >
-                                    S'inscrire
-                                </Link>
-                            </>
-                        )}
-                    </div>
+                {/* Desktop Centered Links */}
+                <div className="hidden lg:flex items-center space-x-8 text-sm font-semibold text-slate-900 tracking-wide">
+                    <Link href="/" className="hover:text-[#7bc043] transition-colors">ACCUEIL</Link>
+                    <Link href="/listings" className="hover:text-[#7bc043] transition-colors">TROUVER UN BIEN</Link>
+                    <Link href="/publish" className="hover:text-[#7bc043] transition-colors">VENDRE UN BIEN</Link>
+                    <Link href="/publish" className="hover:text-[#7bc043] transition-colors">LOUER UN BIEN</Link>
+                    <Link href="/services" className="hover:text-[#7bc043] transition-colors">NOS SERVICES</Link>
+                    <Link href="/contact" className="hover:text-[#7bc043] transition-colors">CONTACT</Link>
                 </div>
 
-                <button className="md:hidden text-text" onClick={() => setIsOpen(!isOpen)}>
-                    {isOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                {/* Optional Subtle Auth/Admin Actions (Right aligned absolutely if needed) */}
+                <div className="hidden lg:flex absolute right-8 items-center gap-4 text-xs font-medium text-slate-600">
+                    {status === "authenticated" ? (
+                        <>
+                            {(session?.user as any)?.role === "ADMIN" && (
+                                <Link href="/admin" className="hover:text-[#0f3b5e]">Admin</Link>
+                            )}
+                            <Link href="/profile" className="hover:text-[#0f3b5e]">Mon Compte</Link>
+                            <span className="text-gray-300">|</span>
+                            <button onClick={() => signOut({ callbackUrl: '/' })} className="hover:text-red-500">Déconnexion</button>
+                        </>
+                    ) : (
+                        <>
+                            <Link href="/auth/signin" className="hover:text-[#0f3b5e] flex items-center gap-1"><User size={14} /> Connexion</Link>
+                        </>
+                    )}
+                </div>
+
+                {/* Mobile Menu Toggle */}
+                <div className="lg:hidden w-full flex justify-between items-center">
+                    <span className="font-bold text-lg text-[#0f3b5e]">Menu</span>
+                    <button className="text-[#0f3b5e]" onClick={() => setIsOpen(!isOpen)}>
+                        {isOpen ? <X size={28} /> : <Menu size={28} />}
+                    </button>
+                </div>
             </div>
 
             {/* Mobile Menu */}
