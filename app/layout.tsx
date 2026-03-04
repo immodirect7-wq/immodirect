@@ -72,7 +72,7 @@ export default function RootLayout({
             <body className={inter.className}>
                 <Providers>
                     <Navbar />
-                    <main className="min-h-screen bg-background">
+                    <main className="min-h-screen bg-background pt-20">
                         <PageTransition>
                             {children}
                         </PageTransition>

@@ -11,7 +11,7 @@ export default function Hero() {
     const router = useRouter();
 
     return (
-        <section className="relative w-full min-h-[600px] flex flex-col justify-center bg-[#f8f9fa] overflow-hidden pt-20 pb-16">
+        <section className="relative w-full min-h-[600px] flex flex-col justify-center bg-[#f8f9fa] overflow-hidden pt-20 pb-16 -mt-20">
             {/* Background Image: A brighter, landscape-oriented image of a city/suburb */}
             <div
                 className="absolute inset-0 bg-cover bg-bottom bg-no-repeat opacity-60 pointer-events-none"
