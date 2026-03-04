@@ -42,6 +42,10 @@ export default async function Home() {
 
                 {/* Main Content */}
                 <div className="flex-1">
+                    {/* Server-side H1 for SEO (visible on desktop, hidden on mobile where mobile H1 exists) */}
+                    <h1 className="hidden md:block text-2xl font-bold text-gray-900 mb-6">
+                        Annonces immobilières au Cameroun
+                    </h1>
                     {/* Mobile Filter Button (Visible only on mobile) */}
                     <div className="md:hidden mb-6 flex justify-between items-center">
                         <h1 className="text-xl font-bold text-gray-900">Annonces récentes</h1>

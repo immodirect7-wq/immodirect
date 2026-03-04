@@ -13,9 +13,15 @@ export default function Footer() {
                         Trouvez votre logement idéal ou louez votre bien en toute simplicité.
                     </p>
                     <div className="flex gap-4">
-                        <Facebook className="hover:text-primary cursor-pointer transition-colors" />
-                        <Twitter className="hover:text-primary cursor-pointer transition-colors" />
-                        <Instagram className="hover:text-primary cursor-pointer transition-colors" />
+                        <a href="https://facebook.com/immodirect" target="_blank" rel="noopener noreferrer" aria-label="Facebook ImmoDirect">
+                            <Facebook className="hover:text-primary cursor-pointer transition-colors" />
+                        </a>
+                        <a href="https://twitter.com/immodirect" target="_blank" rel="noopener noreferrer" aria-label="Twitter ImmoDirect">
+                            <Twitter className="hover:text-primary cursor-pointer transition-colors" />
+                        </a>
+                        <a href="https://instagram.com/immodirect" target="_blank" rel="noopener noreferrer" aria-label="Instagram ImmoDirect">
+                            <Instagram className="hover:text-primary cursor-pointer transition-colors" />
+                        </a>
                     </div>
                 </div>
 
