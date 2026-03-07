@@ -178,15 +178,13 @@ export async function POST(req: Request) {
                     });
                 }
             } else {
-                if (transaction.amount >= 2000) {
-                    await prisma.user.update({
-                        where: { id: transaction.userId },
-                        data: {
-                            hasActivePass: true,
-                            passExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-                        }
-                    });
-                }
+                await prisma.user.update({
+                    where: { id: transaction.userId },
+                    data: {
+                        hasActivePass: true,
+                        passExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+                    }
+                });
             }
         } else if (verifiedStatus === "failed" || verifiedStatus === "canceled" || verifiedStatus === "expired") {
             await prisma.transaction.update({
