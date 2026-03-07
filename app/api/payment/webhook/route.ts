@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { checkTransactionStatus } from "@/lib/campay";
+import { verifyPayment, verifyWebhookSignature } from "@/lib/notchpay";
 import { checkRateLimit, getClientIdentifier, rateLimitResponse } from "@/lib/rateLimit";
 
 const prisma = new PrismaClient();
-
-// Campay Webhook Structure
-interface CampayWebhookData {
-    status: "SUCCESSFUL" | "FAILED";
-    reference: string;
-    amount: number;
-    currency: string;
-    external_reference: string;
-}
 
 export async function POST(req: Request) {
     // Rate limit webhooks: max 30 per minute per IP
@@ -21,23 +12,40 @@ export async function POST(req: Request) {
     if (!limit.allowed) return rateLimitResponse(limit.resetIn);
 
     try {
-        const body: CampayWebhookData = await req.json();
-        console.log("Campay Webhook Received:", body);
+        // Read raw body for signature verification
+        const rawBody = await req.text();
+        const signature = req.headers.get("x-notch-signature") || "";
 
-        const { status, external_reference } = body;
+        // Verify webhook signature (HMAC SHA-256)
+        if (process.env.NOTCHPAY_HASH) {
+            const isValid = verifyWebhookSignature(rawBody, signature);
+            if (!isValid) {
+                console.warn("Invalid NotchPay webhook signature");
+                return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
+            }
+        }
 
-        if (!external_reference) {
+        const body = JSON.parse(rawBody);
+        console.log("NotchPay Webhook Received:", body);
+
+        // NotchPay sends event type and data
+        const event = body.event;
+        const paymentData = body.data;
+
+        if (!paymentData?.merchant_reference && !paymentData?.reference) {
             return NextResponse.json({ message: "Missing reference" }, { status: 400 });
         }
 
+        const reference = paymentData.merchant_reference || paymentData.reference;
+
         // Verify transaction exists in our DB
         const transaction = await prisma.transaction.findUnique({
-            where: { reference: external_reference },
+            where: { reference },
             include: { listing: true, user: true }
         });
 
         if (!transaction) {
-            console.warn(`Transaction not found for ref: ${external_reference}`);
+            console.warn(`Transaction not found for ref: ${reference}`);
             return NextResponse.json({ message: "Transaction not found" }, { status: 404 });
         }
 
@@ -46,22 +54,21 @@ export async function POST(req: Request) {
             return NextResponse.json({ received: true, message: "Already processed" });
         }
 
-        // 🔒 SECURITY: Verify the transaction status directly with CamPay API
-        // Do NOT trust the webhook payload alone
-        let verifiedStatus = status;
+        // 🔒 SECURITY: Verify the transaction status directly with NotchPay API
+        let verifiedStatus = paymentData.status;
         try {
-            const campayVerification = await checkTransactionStatus(external_reference);
-            if (campayVerification && campayVerification.status) {
-                verifiedStatus = campayVerification.status === "SUCCESSFUL" ? "SUCCESSFUL" : "FAILED";
+            const verification = await verifyPayment(reference);
+            if (verification?.transaction?.status) {
+                verifiedStatus = verification.transaction.status;
             }
         } catch (verifyErr) {
-            console.error("CamPay verification failed, falling back to webhook data:", verifyErr);
-            // If CamPay API is down, reject the webhook for safety
+            console.error("NotchPay verification failed, falling back to webhook data:", verifyErr);
             return NextResponse.json({ message: "Unable to verify transaction" }, { status: 503 });
         }
 
         // Update Transaction Status
-        if (verifiedStatus === "SUCCESSFUL") {
+        // NotchPay statuses: "complete", "failed", "canceled", "expired", "pending"
+        if (verifiedStatus === "complete") {
             await prisma.transaction.update({
                 where: { id: transaction.id },
                 data: { status: "SUCCESS" }
@@ -97,7 +104,7 @@ export async function POST(req: Request) {
                     });
                 }
             }
-        } else {
+        } else if (verifiedStatus === "failed" || verifiedStatus === "canceled" || verifiedStatus === "expired") {
             await prisma.transaction.update({
                 where: { id: transaction.id },
                 data: { status: "FAILED" }

@@ -26,11 +26,6 @@ export default function ContactAction({
     const router = useRouter();
 
     const initiatePayment = async (amount: number, description: string) => {
-        if (!userPhone) {
-            alert("Veuillez remplir votre profil avec un numéro de téléphone pour payer.");
-            return;
-        }
-
         if (!confirm(`Initier un paiement de ${amount} FCFA ?`)) return;
 
         setLoading(true);
@@ -40,10 +35,8 @@ export default function ContactAction({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     amount,
-                    phone: userPhone,
                     description,
-                    listingId: amount === 500 ? listingId : undefined,
-                    reason: amount === 500 ? "SINGLE_UNLOCK" : "MONTHLY_PASS"
+                    reason: "PASS"
                 }),
             });
 
@@ -53,7 +46,12 @@ export default function ContactAction({
             }
 
             const data = await res.json();
-            alert(`Paiement initié ! Référence: ${data.reference}. Validez sur votre mobile.`);
+            if (data.authorization_url) {
+                // Redirect to NotchPay checkout page
+                window.location.href = data.authorization_url;
+                return;
+            }
+            alert(`Paiement initié ! Référence: ${data.reference}.`);
 
         } catch (error: any) {
             alert(error.message);

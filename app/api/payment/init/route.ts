@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
-import { requestPayment } from "@/lib/campay";
+import { initializePayment } from "@/lib/notchpay";
 import { checkRateLimit, getClientIdentifier, rateLimitResponse } from "@/lib/rateLimit";
 import crypto from "crypto";
 
@@ -23,11 +23,11 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { amount, phone, description, listingId, reason } = body;
+        const { amount, description, listingId, reason } = body;
 
-        if (!amount || !phone) {
+        if (!amount) {
             return NextResponse.json(
-                { message: "Montant et numéro de téléphone requis." },
+                { message: "Montant requis." },
                 { status: 400 }
             );
         }
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
         const transaction = await prisma.transaction.create({
             data: {
                 amount: parseFloat(amount),
-                provider: "CAMPAY",
+                provider: "NOTCHPAY",
                 status: "PENDING",
                 reference: reference,
                 userId: user.id,
@@ -75,30 +75,41 @@ export async function POST(req: Request) {
             },
         });
 
-        // Initiate Payment with Campay
+        // Build callback URL
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://immodirect.cm";
+        const callbackUrl = `${baseUrl}/api/payment/webhook`;
+
+        // Initiate Payment with NotchPay
         try {
-            const campayRes = await requestPayment({
-                amount: amount.toString(),
-                from: phone, // Format: 237...
+            const notchpayRes = await initializePayment({
+                amount: expectedAmount,
+                email: session.user.email,
                 description: description || "Paiement ImmoDirect",
-                externalReference: transaction.reference,
+                reference: transaction.reference,
+                callbackUrl,
             });
 
-            console.log("Campay Init Response:", campayRes);
+            console.log("NotchPay Init Response:", notchpayRes);
+
+            // NotchPay returns an authorization_url to redirect the user to
+            const authorizationUrl = notchpayRes?.authorization_url || notchpayRes?.transaction?.authorization_url;
+
+            if (!authorizationUrl) {
+                throw new Error("No authorization URL returned from NotchPay");
+            }
 
             return NextResponse.json({
-                message: "Demande de paiement envoyée. Veuillez valider sur votre téléphone.",
+                message: "Redirection vers la page de paiement...",
                 reference: transaction.reference,
-                campay_token: campayRes.token // Or relevant identifying info
+                authorization_url: authorizationUrl,
             });
 
-        } catch (campayError: any) {
-            // If Campay fails, mark transaction as FAILED? Or delete?
+        } catch (notchpayError: any) {
             await prisma.transaction.update({
                 where: { id: transaction.id },
                 data: { status: "FAILED" }
             });
-            throw campayError;
+            throw notchpayError;
         }
 
     } catch (error: any) {

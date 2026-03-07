@@ -132,31 +132,32 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 return;
             }
 
-            // 2. Initiate Payment - non-blocking if CamPay not configured
-            if (phoneNumber) {
-                try {
-                    const paymentRes = await fetch("/api/payment/init", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            amount: platformPrices.listing_price,
-                            phone: phoneNumber,
-                            description: `Publication annonce: ${listing.title}`,
-                            listingId: listing.id
-                        }),
-                    });
+            // 2. Initiate Payment with NotchPay - redirect to checkout
+            try {
+                const paymentRes = await fetch("/api/payment/init", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        amount: platformPrices.listing_price,
+                        description: `Publication annonce: ${listing.title}`,
+                        listingId: listing.id,
+                        reason: "LISTING_FEE"
+                    }),
+                });
 
-                    if (paymentRes.ok) {
-                        const paymentData = await paymentRes.json();
-                        setPaymentNote(`✅ Demande de paiement envoyée ! Référence: ${paymentData.reference}. Veuillez valider sur votre téléphone.`);
-                    } else {
-                        setPaymentNote("⚠️ Votre annonce a été enregistrée mais le paiement n'a pas pu être initialisé. Contactez le support.");
+                if (paymentRes.ok) {
+                    const paymentData = await paymentRes.json();
+                    if (paymentData.authorization_url) {
+                        // Redirect to NotchPay checkout page
+                        window.location.href = paymentData.authorization_url;
+                        return;
                     }
-                } catch (payErr) {
-                    setPaymentNote("⚠️ Votre annonce a été enregistrée. Merci de contacter le support pour confirmer le paiement.");
+                    setPaymentNote(`✅ Paiement initié ! Référence: ${paymentData.reference}.`);
+                } else {
+                    setPaymentNote("⚠️ Votre annonce a été enregistrée mais le paiement n'a pas pu être initialisé. Contactez le support.");
                 }
-            } else {
-                setPaymentNote("✅ Annonce enregistrée avec succès ! Elle sera visible après validation du paiement.");
+            } catch (payErr) {
+                setPaymentNote("⚠️ Votre annonce a été enregistrée. Merci de contacter le support pour confirmer le paiement.");
             }
         } catch (err: any) {
             setError(err.message);
@@ -407,21 +408,11 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
             </div>
 
             {platformPrices.listing_price > 0 && (
-                <div>
-                    <label className="block text-sm font-medium mb-1">
-                        N° Téléphone Mobile Money (pour le paiement)
-                    </label>
-                    <div className="flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-colors">
-                        <span className="bg-gray-50 px-3 py-2 text-sm text-gray-500 border-r">+237</span>
-                        <input
-                            type="tel"
-                            placeholder="600000000"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value.startsWith("237") ? e.target.value : `237${e.target.value.replace(/^0+/, '')}`)}
-                            className="flex-1 px-3 py-2 outline-none text-sm"
-                        />
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">MTN MoMo ou Orange Money. Requis pour valider votre publication.</p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                        💳 Frais de publication : <strong>{platformPrices.listing_price.toLocaleString()} FCFA</strong>.
+                        Après soumission, vous serez redirigé vers la page de paiement sécurisé (MTN MoMo, Orange Money, Carte bancaire).
+                    </p>
                 </div>
             )}
 
