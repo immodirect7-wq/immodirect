@@ -288,105 +288,6 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
             </div>
 
             <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea
-                    className="w-full border rounded-lg p-2 h-24"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    required
-                />
-            </div>
-
-            <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Photos du bien
-                </label>
-
-                <CldUploadWidget
-                    uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "immodirect_upload"}
-                    onSuccess={(result: any) => {
-                        const newImage = result?.info?.secure_url;
-                        if (newImage) {
-                            // Use ref to avoid stale closure - always has latest images
-                            const updated = [...imagesRef.current, newImage];
-                            imagesRef.current = updated;
-                            setImages(updated);
-                        }
-                    }}
-                    options={{
-                        maxFiles: 10,
-                        resourceType: "image",
-                        clientAllowedFormats: ["image"],
-                        sources: ["local", "camera"],
-                        showAdvancedOptions: false,
-                        cropping: false,
-                        multiple: true,
-                        defaultSource: "local_disk",
-                        styles: {
-                            palette: {
-                                window: "#FFFFFF",
-                                sourceBg: "#F8F8F8",
-                                windowBorder: "#D0D0D0",
-                                tabIcon: "#0E2048",
-                                inactiveTabIcon: "#555A5F",
-                                menuIcons: "#0E2048",
-                                link: "#0366D6",
-                                action: "#0366D6",
-                                inProgress: "#0366D6",
-                                complete: "#28A745",
-                                error: "#DC3545",
-                                textDark: "#000000",
-                                textLight: "#FFFFFF"
-                            }
-                        }
-                    }}
-                >
-                    {({ open }) => {
-                        return (
-                            <div
-                                onClick={() => open()}
-                                className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-50 transition"
-                            >
-                                <Upload size={24} className="mb-2" />
-                                <span>Cliquez pour ajouter des photos</span>
-                                <span className="text-xs text-gray-400 mt-1">({images.length}/10 photos)</span>
-                            </div>
-                        );
-                    }}
-                </CldUploadWidget>
-
-                {/* Image Previews */}
-                {images.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2 mt-4">
-                        {images.map((img: string, idx: number) => (
-                            <div key={idx} className="relative h-24 rounded-md overflow-hidden bg-gray-100 border group">
-                                <img src={img} alt="Aperçu" className="w-full h-full object-cover" />
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const updated = images.filter((_, i) => i !== idx);
-                                        imagesRef.current = updated;
-                                        setImages(updated);
-                                    }}
-                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div className="space-y-2">
-                <LocationPickerModal
-                    onLocationSelect={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
-                    initialLat={formData.latitude || undefined}
-                    initialLng={formData.longitude || undefined}
-                />
-            </div>
-
-            <div>
                 <label className="block text-sm font-medium mb-1">
                     N° Téléphone de contact <span className="text-red-500">*</span>
                 </label>
@@ -404,7 +305,17 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                         required
                     />
                 </div>
-                <p className="text-xs text-slate-500 mt-1">Ce numéro sera communiqué aux locataires intéressés.</p>
+                <p className="text-xs text-slate-500 mt-1 mb-4">Ce numéro sera communiqué aux locataires intéressés.</p>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea
+                    className="w-full border rounded-lg p-2 h-24"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    required
+                />
             </div>
 
             {platformPrices.listing_price > 0 && (

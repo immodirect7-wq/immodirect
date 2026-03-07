@@ -84,39 +84,40 @@ export default function ContactAction({
             <h3 className="font-bold text-gray-800 text-center">Débloquer le contact</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* Single Unlock Option */}
-                <button
-                    onClick={() => initiatePayment(500, `Déblocage contact: ${listingTitle}`, "SINGLE_UNLOCK", listingId)}
-                    disabled={loading}
-                    className="flex flex-col items-center justify-center gap-1 bg-white border border-blue-200 text-blue-600 py-3 px-2 rounded-lg hover:bg-blue-50 transition hover:shadow-md group"
-                >
-                    {loading ? <Loader2 className="animate-spin" /> : (
-                        <>
+                {loading ? (
+                    <div className="col-span-1 md:col-span-2 flex flex-col items-center justify-center gap-2 bg-blue-50 text-blue-700 py-4 px-2 rounded-xl border border-blue-200">
+                        <Loader2 className="animate-spin" size={24} />
+                        <span className="font-medium text-sm">Redirection vers le paiement sécurisé...</span>
+                    </div>
+                ) : (
+                    <>
+                        {/* Single Unlock Option */}
+                        <button
+                            onClick={() => initiatePayment(500, `Déblocage contact: ${listingTitle}`, "SINGLE_UNLOCK", listingId)}
+                            disabled={loading}
+                            className="flex flex-col items-center justify-center gap-1 bg-white border border-blue-200 text-blue-600 py-3 px-2 rounded-lg hover:bg-blue-50 transition hover:shadow-md group"
+                        >
                             <div className="flex items-center gap-2 font-bold">
                                 <Eye size={18} />
                                 500 FCFA
                             </div>
                             <span className="text-xs text-gray-500 group-hover:text-blue-500">Voir ce numéro</span>
-                        </>
-                    )}
-                </button>
+                        </button>
 
-                {/* Monthly Pass Option */}
-                <button
-                    onClick={() => initiatePayment(passPrice, "Pass Mensuel ImmoDirect", "PASS")}
-                    disabled={loading}
-                    className="flex flex-col items-center justify-center gap-1 bg-blue-600 text-white py-3 px-2 rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg"
-                >
-                    {loading ? <Loader2 className="animate-spin" /> : (
-                        <>
+                        {/* Monthly Pass Option */}
+                        <button
+                            onClick={() => initiatePayment(passPrice, "Pass Mensuel ImmoDirect", "PASS")}
+                            disabled={loading}
+                            className="flex flex-col items-center justify-center gap-1 bg-blue-600 text-white py-3 px-2 rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg"
+                        >
                             <div className="flex items-center gap-2 font-bold">
                                 <Lock size={18} />
                                 {passPrice.toLocaleString()} FCFA
                             </div>
                             <span className="text-xs text-blue-100">Pass Illimité (1 mois)</span>
-                        </>
-                    )}
-                </button>
+                        </button>
+                    </>
+                )}
             </div>
             <p className="text-center text-xs text-gray-400 mt-2">
                 Paiement sécurisé via Mobile Money (MTN/Orange)
