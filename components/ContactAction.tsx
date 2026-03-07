@@ -25,7 +25,7 @@ export default function ContactAction({
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const initiatePayment = async (amount: number, description: string) => {
+    const initiatePayment = async (amount: number, description: string, paymentReason: string, forListingId?: string) => {
         if (!confirm(`Initier un paiement de ${amount} FCFA ?`)) return;
 
         setLoading(true);
@@ -36,7 +36,8 @@ export default function ContactAction({
                 body: JSON.stringify({
                     amount,
                     description,
-                    reason: "PASS"
+                    reason: paymentReason,
+                    listingId: forListingId,
                 }),
             });
 
@@ -85,7 +86,7 @@ export default function ContactAction({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Single Unlock Option */}
                 <button
-                    onClick={() => initiatePayment(500, `Déblocage contact: ${listingTitle}`)}
+                    onClick={() => initiatePayment(500, `Déblocage contact: ${listingTitle}`, "SINGLE_UNLOCK", listingId)}
                     disabled={loading}
                     className="flex flex-col items-center justify-center gap-1 bg-white border border-blue-200 text-blue-600 py-3 px-2 rounded-lg hover:bg-blue-50 transition hover:shadow-md group"
                 >
@@ -102,7 +103,7 @@ export default function ContactAction({
 
                 {/* Monthly Pass Option */}
                 <button
-                    onClick={() => initiatePayment(passPrice, "Pass Mensuel ImmoDirect")}
+                    onClick={() => initiatePayment(passPrice, "Pass Mensuel ImmoDirect", "PASS")}
                     disabled={loading}
                     className="flex flex-col items-center justify-center gap-1 bg-blue-600 text-white py-3 px-2 rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg"
                 >

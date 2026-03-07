@@ -46,13 +46,15 @@ export async function POST(req: Request) {
         // Verify Amount against Platform Settings
         let expectedAmount = parseFloat(amount);
         const settings = await prisma.platformSetting.findMany();
-        const config: Record<string, number> = { listing_price: 5000, pass_price: 2000 };
+        const config: Record<string, number> = { listing_price: 5000, pass_price: 2000, unlock_price: 500 };
         settings.forEach((s: any) => config[s.id] = s.value);
 
-        if (reason === "LISTING_FEE" || listingId) {
+        if (reason === "LISTING_FEE" || (listingId && reason !== "SINGLE_UNLOCK")) {
             expectedAmount = config.listing_price;
         } else if (reason === "PASS") {
             expectedAmount = config.pass_price;
+        } else if (reason === "SINGLE_UNLOCK") {
+            expectedAmount = config.unlock_price;
         }
 
         if (parseFloat(amount) !== expectedAmount) {
