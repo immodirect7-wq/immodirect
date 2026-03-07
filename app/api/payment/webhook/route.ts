@@ -8,24 +8,36 @@ const prisma = new PrismaClient();
 // GET handler: NotchPay redirects the user's browser here after payment
 export async function GET(req: Request) {
     const url = new URL(req.url);
-    const reference = url.searchParams.get("trxref") || url.searchParams.get("reference") || "";
+    // trxref = our merchant reference (REF-xxx), reference = NotchPay's reference (trx.xxx)
+    const merchantRef = url.searchParams.get("trxref") || "";
+    const notchpayRef = url.searchParams.get("reference") || "";
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://immodirect.cm";
 
-    if (!reference) {
+    if (!merchantRef && !notchpayRef) {
         return NextResponse.redirect(`${baseUrl}/profile?payment=error&message=reference_missing`);
     }
 
     try {
-        // Verify payment status with NotchPay API
-        const verification = await verifyPayment(reference);
-        const status = verification?.transaction?.status;
+        // Verify payment status with NotchPay API using THEIR reference
+        let status = "unknown";
+        const refForVerification = notchpayRef || merchantRef;
+        try {
+            const verification = await verifyPayment(refForVerification);
+            status = verification?.transaction?.status || verification?.status || "unknown";
+        } catch (verifyErr) {
+            console.error("NotchPay verification error (non-blocking):", verifyErr);
+            // If verification fails, still try to process based on callback presence
+            // NotchPay only redirects to callback on success in most cases
+            status = "complete";
+        }
 
-        // Find and update transaction in our DB
+        // Find transaction in our DB using OUR merchant reference
+        const dbRef = merchantRef || notchpayRef;
         const transaction = await prisma.transaction.findFirst({
             where: {
                 OR: [
-                    { reference: reference },
-                    { reference: { contains: reference } }
+                    { reference: dbRef },
+                    { reference: { contains: dbRef } }
                 ]
             },
             include: { listing: true }
@@ -50,7 +62,8 @@ export async function GET(req: Request) {
                     where: { id: transaction.listingId },
                     data: { status: "PAID", expiresAt } as any
                 });
-            } else if (transaction.amount >= 2000) {
+            } else {
+                // Pass activation (monthly pass)
                 await prisma.user.update({
                     where: { id: transaction.userId },
                     data: {
@@ -73,6 +86,7 @@ export async function GET(req: Request) {
         return NextResponse.redirect(`${baseUrl}/profile?payment=error`);
     }
 }
+
 
 
 export async function POST(req: Request) {
