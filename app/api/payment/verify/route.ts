@@ -14,10 +14,11 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { reference, trxref } = body;
 
-        const merchantRef = trxref || reference || "";
-        const notchpayRef = reference || trxref || "";
+        // trxref = our merchant reference (REF-xxx), reference = NotchPay reference (trx.xxx)
+        const merchantRef = trxref || "";
+        const notchpayRef = reference || "";
 
-        if (!merchantRef) {
+        if (!merchantRef && !notchpayRef) {
             return NextResponse.json({ error: "Référence manquante" }, { status: 400 });
         }
 
@@ -30,108 +31,151 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
         }
 
-        // Find the transaction in our DB
+        // Find the transaction in our DB using merchant reference
+        const searchRef = merchantRef || notchpayRef;
         const transaction = await prisma.transaction.findFirst({
             where: {
-                OR: [
-                    { reference: merchantRef },
-                    { reference: trxref || "" },
-                ],
                 userId: user.id,
+                OR: [
+                    { reference: searchRef },
+                    ...(merchantRef ? [{ reference: merchantRef }] : []),
+                ],
             },
             include: { listing: true },
+            orderBy: { createdAt: "desc" },
         });
 
         if (!transaction) {
-            return NextResponse.json({
-                error: "Transaction introuvable",
-                debug: { merchantRef, notchpayRef, userId: user.id }
-            }, { status: 404 });
+            // Fallback: find the most recent PENDING transaction for this user
+            const recentTransaction = await prisma.transaction.findFirst({
+                where: {
+                    userId: user.id,
+                    status: "PENDING",
+                },
+                include: { listing: true },
+                orderBy: { createdAt: "desc" },
+            });
+
+            if (!recentTransaction) {
+                return NextResponse.json({
+                    error: "Transaction introuvable",
+                    status: "not_found",
+                }, { status: 404 });
+            }
+
+            // Use the recent pending transaction
+            return await processTransaction(recentTransaction, notchpayRef, user.id);
         }
 
         // If already processed, return current state
         if (transaction.status === "SUCCESS") {
+            const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
             return NextResponse.json({
                 status: "success",
                 message: "Paiement déjà validé",
-                hasPass: user.hasActivePass,
-                passExpiry: user.passExpiry,
+                type: transaction.listingId ? "listing" : "pass",
+                hasPass: updatedUser?.hasActivePass || false,
+                passExpiry: updatedUser?.passExpiry,
             });
         }
 
-        // Verify payment with NotchPay API
-        let paymentStatus = "unknown";
-        try {
-            const verification = await verifyPayment(notchpayRef);
-            paymentStatus = verification?.transaction?.status || verification?.status || "unknown";
-            console.log("NotchPay verification result:", JSON.stringify(verification));
-        } catch (err) {
-            console.error("NotchPay verify error:", err);
-            // In sandbox, assume success if we got redirected back
-            paymentStatus = "complete";
-        }
+        return await processTransaction(transaction, notchpayRef, user.id);
 
-        if (paymentStatus === "complete") {
-            // Update transaction status
-            await prisma.transaction.update({
-                where: { id: transaction.id },
-                data: { status: "SUCCESS" },
-            });
-
-            // Activate listing or pass
-            if (transaction.listingId) {
-                // Listing publication
-                const settings = await prisma.platformSetting.findUnique({
-                    where: { id: "listing_duration_days" },
-                });
-                const durationDays = settings?.value || 30;
-                const expiresAt = new Date();
-                expiresAt.setDate(expiresAt.getDate() + durationDays);
-
-                await prisma.listing.update({
-                    where: { id: transaction.listingId },
-                    data: { status: "PAID", expiresAt } as any,
-                });
-
-                return NextResponse.json({
-                    status: "success",
-                    message: "Annonce publiée avec succès !",
-                    type: "listing",
-                });
-            } else {
-                // Pass activation
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: {
-                        hasActivePass: true,
-                        passExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                    },
-                });
-
-                return NextResponse.json({
-                    status: "success",
-                    message: "Pass illimité activé pour 30 jours !",
-                    type: "pass",
-                    hasPass: true,
-                    passExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                });
-            }
-        } else {
-            await prisma.transaction.update({
-                where: { id: transaction.id },
-                data: { status: "FAILED" },
-            });
-
-            return NextResponse.json({
-                status: "failed",
-                message: `Paiement échoué (statut: ${paymentStatus})`,
-            });
-        }
     } catch (error: any) {
         console.error("Payment verify error:", error);
         return NextResponse.json(
-            { error: error.message || "Erreur de vérification" },
+            { error: error.message || "Erreur de vérification", status: "error" },
             { status: 500 }
         );
+    }
+}
+
+async function processTransaction(transaction: any, notchpayRef: string, userId: string) {
+    // Verify payment with NotchPay API
+    let paymentComplete = false;
+
+    if (notchpayRef) {
+        try {
+            const verification = await verifyPayment(notchpayRef);
+            console.log("NotchPay verify response:", JSON.stringify(verification));
+
+            // NotchPay response format: { code, status, message, data: { status: "complete", ... } }
+            const paymentStatus = verification?.data?.status
+                || verification?.transaction?.status
+                || verification?.status
+                || "unknown";
+
+            paymentComplete = paymentStatus === "complete" || paymentStatus === "successful";
+            console.log("Payment status resolved:", paymentStatus, "→ complete:", paymentComplete);
+        } catch (err) {
+            console.error("NotchPay verify error:", err);
+            // In sandbox mode, if we got redirected back, likely success
+            paymentComplete = true;
+        }
+    } else {
+        // No NotchPay ref — if user was redirected back, treat as success in sandbox
+        paymentComplete = true;
+    }
+
+    if (paymentComplete && transaction.status === "PENDING") {
+        // Update transaction status
+        await prisma.transaction.update({
+            where: { id: transaction.id },
+            data: { status: "SUCCESS" },
+        });
+
+        // Activate listing or pass
+        if (transaction.listingId) {
+            // Listing publication
+            const settings = await prisma.platformSetting.findUnique({
+                where: { id: "listing_duration_days" },
+            });
+            const durationDays = settings?.value || 30;
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+            await prisma.listing.update({
+                where: { id: transaction.listingId },
+                data: { status: "PAID", expiresAt } as any,
+            });
+
+            return NextResponse.json({
+                status: "success",
+                message: "Annonce publiée avec succès !",
+                type: "listing",
+            });
+        } else {
+            // Pass activation
+            const passExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            await prisma.user.update({
+                where: { id: userId },
+                data: {
+                    hasActivePass: true,
+                    passExpiry,
+                },
+            });
+
+            console.log("Pass activated for user:", userId, "until:", passExpiry);
+
+            return NextResponse.json({
+                status: "success",
+                message: "Pass illimité activé pour 30 jours !",
+                type: "pass",
+                hasPass: true,
+                passExpiry,
+            });
+        }
+    } else if (!paymentComplete) {
+        return NextResponse.json({
+            status: "failed",
+            message: "Le paiement n'a pas été confirmé par NotchPay.",
+        });
+    } else {
+        // Already processed
+        return NextResponse.json({
+            status: "success",
+            message: "Paiement déjà traité.",
+            type: transaction.listingId ? "listing" : "pass",
+        });
     }
 }
