@@ -79,7 +79,7 @@ export async function POST(req: Request) {
 
         // Build callback URL
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://immodirect.cm";
-        const callbackUrl = `${baseUrl}/api/payment/webhook`;
+        const callbackUrl = `${baseUrl}/payment/result`;
 
         // Initiate Payment with NotchPay
         try {
