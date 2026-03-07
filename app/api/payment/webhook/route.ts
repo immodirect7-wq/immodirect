@@ -5,6 +5,76 @@ import { checkRateLimit, getClientIdentifier, rateLimitResponse } from "@/lib/ra
 
 const prisma = new PrismaClient();
 
+// GET handler: NotchPay redirects the user's browser here after payment
+export async function GET(req: Request) {
+    const url = new URL(req.url);
+    const reference = url.searchParams.get("trxref") || url.searchParams.get("reference") || "";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://immodirect.cm";
+
+    if (!reference) {
+        return NextResponse.redirect(`${baseUrl}/profile?payment=error&message=reference_missing`);
+    }
+
+    try {
+        // Verify payment status with NotchPay API
+        const verification = await verifyPayment(reference);
+        const status = verification?.transaction?.status;
+
+        // Find and update transaction in our DB
+        const transaction = await prisma.transaction.findFirst({
+            where: {
+                OR: [
+                    { reference: reference },
+                    { reference: { contains: reference } }
+                ]
+            },
+            include: { listing: true }
+        });
+
+        if (transaction && transaction.status === "PENDING" && status === "complete") {
+            await prisma.transaction.update({
+                where: { id: transaction.id },
+                data: { status: "SUCCESS" }
+            });
+
+            // Activate listing or pass
+            if (transaction.listingId) {
+                const settings = await prisma.platformSetting.findUnique({
+                    where: { id: "listing_duration_days" }
+                });
+                const durationDays = settings?.value || 30;
+                const expiresAt = new Date();
+                expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+                await prisma.listing.update({
+                    where: { id: transaction.listingId },
+                    data: { status: "PAID", expiresAt } as any
+                });
+            } else if (transaction.amount >= 2000) {
+                await prisma.user.update({
+                    where: { id: transaction.userId },
+                    data: {
+                        hasActivePass: true,
+                        passExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                    }
+                });
+            }
+
+            return NextResponse.redirect(`${baseUrl}/profile?payment=success`);
+        }
+
+        if (status === "complete") {
+            return NextResponse.redirect(`${baseUrl}/profile?payment=success`);
+        } else {
+            return NextResponse.redirect(`${baseUrl}/profile?payment=failed&status=${status || "unknown"}`);
+        }
+    } catch (error) {
+        console.error("Payment callback error:", error);
+        return NextResponse.redirect(`${baseUrl}/profile?payment=error`);
+    }
+}
+
+
 export async function POST(req: Request) {
     // Rate limit webhooks: max 30 per minute per IP
     const clientId = getClientIdentifier(req, "webhook");
