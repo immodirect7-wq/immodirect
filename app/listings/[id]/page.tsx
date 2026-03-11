@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import ContactAction from "@/components/ContactAction";
 import TrustBadge from "@/components/TrustBadge";
 import ReportButton from "@/components/ReportButton";
+import NavigateButton from "@/components/NavigateButton";
 import { notFound } from "next/navigation";
 import ImageCarousel from "@/components/ImageCarousel";
 import { getServerSession } from "next-auth";
@@ -195,6 +196,14 @@ export default async function ListingPage({ params }: ListingPageProps) {
                     <p className="text-primary font-bold text-xl">{listing.price.toLocaleString()} FCFA / mois</p>
                     <p className="text-gray-600">{listing.neighborhood}, {listing.city}</p>
                     <p className="text-sm text-gray-500">Avance: {listing.advanceMonths} mois</p>
+                    <div className="mt-3">
+                        <NavigateButton
+                            latitude={listing.latitude}
+                            longitude={listing.longitude}
+                            neighborhood={listing.neighborhood}
+                            city={listing.city}
+                        />
+                    </div>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg mb-6">

@@ -86,6 +86,14 @@ export default function Map({ listings }: MapProps) {
                                     <Link href={`/listings/${listing.id}`} className="block w-full text-center mt-3 bg-slate-900 text-white text-xs font-bold py-2 rounded-md hover:bg-slate-800 transition-colors">
                                         Voir l'annonce
                                     </Link>
+                                    <a
+                                        href={`https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block w-full text-center mt-1.5 bg-blue-600 text-white text-xs font-bold py-2 rounded-md hover:bg-blue-700 transition-colors"
+                                    >
+                                        S&apos;y rendre 📍
+                                    </a>
                                 </div>
                             </Popup>
                         </Marker>

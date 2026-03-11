@@ -32,6 +32,15 @@ function InvalidateSize() {
     return null;
 }
 
+// Fly to new coordinates when they change (GPS, search, etc.)
+function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
+    const map = useMap();
+    useEffect(() => {
+        map.flyTo([lat, lng], 16, { duration: 1.2 });
+    }, [lat, lng, map]);
+    return null;
+}
+
 interface MapPickerInnerProps {
     onSelect: (lat: number, lng: number) => void;
     initialLat: number;
@@ -40,6 +49,11 @@ interface MapPickerInnerProps {
 
 export default function MapPickerInner({ onSelect, initialLat, initialLng }: MapPickerInnerProps) {
     const [markerPos, setMarkerPos] = useState<{ lat: number; lng: number } | null>(null);
+
+    // Sync marker with external coordinate changes (GPS / search)
+    useEffect(() => {
+        setMarkerPos({ lat: initialLat, lng: initialLng });
+    }, [initialLat, initialLng]);
 
     const handleClick = (lat: number, lng: number) => {
         setMarkerPos({ lat, lng });
@@ -53,6 +67,7 @@ export default function MapPickerInner({ onSelect, initialLat, initialLng }: Map
             style={{ width: "100%", height: "100%" }}
         >
             <InvalidateSize />
+            <RecenterMap lat={initialLat} lng={initialLng} />
             <TileLayer
                 attribution="&copy; Google Maps"
                 url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"

@@ -318,6 +318,21 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 />
             </div>
 
+            {/* VTC-style Location Picker */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    📍 Localisation du logement
+                </h3>
+                <p className="text-xs text-slate-500">
+                    Ajoutez la position GPS pour que les locataires puissent trouver votre bien facilement — comme dans Uber ou Yango !
+                </p>
+                <LocationPickerModal
+                    onLocationSelect={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
+                    initialLat={formData.latitude ?? undefined}
+                    initialLng={formData.longitude ?? undefined}
+                />
+            </div>
+
             {platformPrices.listing_price > 0 && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-sm text-blue-800">
