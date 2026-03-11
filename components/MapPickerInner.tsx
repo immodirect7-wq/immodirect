@@ -69,8 +69,8 @@ export default function MapPickerInner({ onSelect, initialLat, initialLng }: Map
             <InvalidateSize />
             <RecenterMap lat={initialLat} lng={initialLng} />
             <TileLayer
-                attribution="&copy; Google Maps"
-                url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
             />
             <ClickHandler onSelect={handleClick} />
             {markerPos && <Marker position={[markerPos.lat, markerPos.lng]} />}
