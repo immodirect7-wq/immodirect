@@ -318,6 +318,73 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 />
             </div>
 
+            {/* Image Upload */}
+            <div>
+                <label className="block text-sm font-medium mb-2">
+                    Photos du logement <span className="text-gray-400">(recommandé)</span>
+                </label>
+                <CldUploadWidget
+                    uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                    options={{
+                        maxFiles: 8,
+                        resourceType: "image",
+                        sources: ["local", "camera"],
+                        multiple: true,
+                        language: "fr",
+                        text: {
+                            "fr": {
+                                "or": "ou",
+                                "menu": { "files": "Mes fichiers", "camera": "Caméra" },
+                                "local": { "browse": "Parcourir", "dd_title_single": "Glissez une photo ici", "dd_title_multi": "Glissez des photos ici" }
+                            }
+                        }
+                    }}
+                    onSuccess={(result: any) => {
+                        if (result.info?.secure_url) {
+                            const newImages = [...imagesRef.current, result.info.secure_url];
+                            imagesRef.current = newImages;
+                            setImages(newImages);
+                        }
+                    }}
+                >
+                    {({ open }) => (
+                        <button
+                            type="button"
+                            onClick={() => open()}
+                            className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer group"
+                        >
+                            <Upload size={28} className="mx-auto mb-2 text-gray-400 group-hover:text-primary transition-colors" />
+                            <p className="text-sm font-medium text-gray-600 group-hover:text-primary">
+                                Cliquez pour ajouter des photos
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">JPG, PNG — 8 photos max</p>
+                        </button>
+                    )}
+                </CldUploadWidget>
+
+                {/* Image Previews */}
+                {images.length > 0 && (
+                    <div className="mt-3 grid grid-cols-4 gap-2">
+                        {images.map((url, idx) => (
+                            <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border">
+                                <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newImages = images.filter((_, i) => i !== idx);
+                                        imagesRef.current = newImages;
+                                        setImages(newImages);
+                                    }}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* VTC-style Location Picker */}
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 space-y-2">
                 <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
