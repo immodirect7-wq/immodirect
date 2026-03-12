@@ -321,7 +321,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
             {/* Image Upload — Native file picker (instant on mobile) */}
             <div>
                 <label className="block text-sm font-medium mb-2">
-                    Photos du logement <span className="text-gray-400">(recommandé)</span>
+                    Ajouter photos du logement <span className="text-gray-400">(recommandé)</span>
                 </label>
 
                 {/* Two buttons: Gallery + Camera */}
