@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Upload, Loader2 } from "lucide-react";
-import { CldUploadWidget } from 'next-cloudinary';
+import { Upload, Loader2, Camera, ImagePlus, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import LocationPickerModal from "./LocationPickerModal";
@@ -30,6 +29,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
     const [contactPhone, setContactPhone] = useState(""); // Numéro de contact du propriétaire (obligatoire)
     const [phoneNumber, setPhoneNumber] = useState(""); // Numéro Mobile Money (paiement) - optionnel si prix > 0
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [error, setError] = useState("");
     const [paymentNote, setPaymentNote] = useState("");
     const [platformPrices, setPlatformPrices] = useState({ listing_price: 5000, pass_price: 2000 });
@@ -318,65 +318,108 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 />
             </div>
 
-            {/* Image Upload */}
+            {/* Image Upload — Native file picker (instant on mobile) */}
             <div>
                 <label className="block text-sm font-medium mb-2">
                     Photos du logement <span className="text-gray-400">(recommandé)</span>
                 </label>
-                <CldUploadWidget
-                    uploadPreset="immodirect_upload"
-                    options={{
-                        maxFiles: 8,
-                        sources: ["local", "camera"],
-                        multiple: true,
-                        showPoweredBy: false,
-                        singleUploadAutoClose: false,
-                    }}
-                    onSuccess={(result: any) => {
-                        if (result.info?.secure_url) {
-                            const newImages = [...imagesRef.current, result.info.secure_url];
-                            imagesRef.current = newImages;
-                            setImages(newImages);
-                        }
-                    }}
-                    onUpload={(result: any) => {
-                        if (result.info?.secure_url) {
-                            const newImages = [...imagesRef.current, result.info.secure_url];
-                            imagesRef.current = newImages;
-                            setImages(newImages);
-                        }
-                    }}
-                >
-                    {({ open }) => (
-                        <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); open(); }}
-                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); open(); }}
-                            className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer group select-none"
-                        >
-                            <Upload size={28} className="mx-auto mb-2 text-gray-400 group-hover:text-primary transition-colors" />
-                            <p className="text-sm font-medium text-gray-600 group-hover:text-primary">
-                                Appuyez pour ajouter des photos
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">JPG, PNG — 8 photos max</p>
-                        </div>
-                    )}
-                </CldUploadWidget>
-                {/* Force Cloudinary widget overlay above everything on mobile */}
-                <style jsx global>{`
-                    .cloudinary-overlay, 
-                    iframe[src*="cloudinary"],
-                    div[data-test="widget-container"] {
-                        z-index: 99999 !important;
-                    }
-                `}</style>
+
+                {/* Two buttons: Gallery + Camera */}
+                <div className="flex gap-3">
+                    {/* Gallery button */}
+                    <label className="flex-1 border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer group">
+                        <ImagePlus size={24} className="mx-auto mb-1.5 text-gray-400 group-hover:text-primary transition-colors" />
+                        <p className="text-xs font-medium text-gray-600 group-hover:text-primary">Galerie</p>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={async (e) => {
+                                const files = e.target.files;
+                                if (!files || files.length === 0) return;
+                                setUploading(true);
+                                for (const file of Array.from(files)) {
+                                    if (imagesRef.current.length >= 8) break;
+                                    try {
+                                        const fd = new FormData();
+                                        fd.append("file", file);
+                                        fd.append("upload_preset", "immodirect_upload");
+                                        const res = await fetch(
+                                            `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+                                            { method: "POST", body: fd }
+                                        );
+                                        const data = await res.json();
+                                        if (data.secure_url) {
+                                            const newImages = [...imagesRef.current, data.secure_url];
+                                            imagesRef.current = newImages;
+                                            setImages(newImages);
+                                        }
+                                    } catch (err) {
+                                        console.error("Upload failed:", err);
+                                    }
+                                }
+                                setUploading(false);
+                                e.target.value = "";
+                            }}
+                        />
+                    </label>
+
+                    {/* Camera button */}
+                    <label className="flex-1 border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer group">
+                        <Camera size={24} className="mx-auto mb-1.5 text-gray-400 group-hover:text-primary transition-colors" />
+                        <p className="text-xs font-medium text-gray-600 group-hover:text-primary">Caméra</p>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file || imagesRef.current.length >= 8) return;
+                                setUploading(true);
+                                try {
+                                    const fd = new FormData();
+                                    fd.append("file", file);
+                                    fd.append("upload_preset", "immodirect_upload");
+                                    const res = await fetch(
+                                        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+                                        { method: "POST", body: fd }
+                                    );
+                                    const data = await res.json();
+                                    if (data.secure_url) {
+                                        const newImages = [...imagesRef.current, data.secure_url];
+                                        imagesRef.current = newImages;
+                                        setImages(newImages);
+                                    }
+                                } catch (err) {
+                                    console.error("Upload failed:", err);
+                                }
+                                setUploading(false);
+                                e.target.value = "";
+                            }}
+                        />
+                    </label>
+                </div>
+
+                {/* Upload progress */}
+                {uploading && (
+                    <div className="flex items-center justify-center gap-2 mt-3 text-blue-600 text-sm">
+                        <Loader2 size={16} className="animate-spin" />
+                        Envoi en cours...
+                    </div>
+                )}
+
+                {/* Image count */}
+                {images.length > 0 && (
+                    <p className="text-xs text-green-600 mt-2 font-medium">{images.length}/8 photo{images.length > 1 ? "s" : ""} ajoutée{images.length > 1 ? "s" : ""}</p>
+                )}
 
                 {/* Image Previews */}
                 {images.length > 0 && (
-                    <div className="mt-3 grid grid-cols-4 gap-2">
+                    <div className="mt-2 grid grid-cols-4 gap-2">
                         {images.map((url, idx) => (
-                            <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border">
+                            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border">
                                 <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
                                 <button
                                     type="button"
@@ -385,9 +428,9 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                                         imagesRef.current = newImages;
                                         setImages(newImages);
                                     }}
-                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                    className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow"
                                 >
-                                    ✕
+                                    <X size={12} />
                                 </button>
                             </div>
                         ))}
