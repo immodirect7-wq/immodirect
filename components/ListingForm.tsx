@@ -329,6 +329,8 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                         maxFiles: 8,
                         sources: ["local", "camera"],
                         multiple: true,
+                        showPoweredBy: false,
+                        singleUploadAutoClose: false,
                     }}
                     onSuccess={(result: any) => {
                         if (result.info?.secure_url) {
@@ -346,19 +348,29 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                     }}
                 >
                     {({ open }) => (
-                        <button
-                            type="button"
-                            onClick={() => open()}
-                            className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer group"
+                        <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); open(); }}
+                            onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); open(); }}
+                            className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer group select-none"
                         >
                             <Upload size={28} className="mx-auto mb-2 text-gray-400 group-hover:text-primary transition-colors" />
                             <p className="text-sm font-medium text-gray-600 group-hover:text-primary">
-                                Cliquez pour ajouter des photos
+                                Appuyez pour ajouter des photos
                             </p>
                             <p className="text-xs text-gray-400 mt-1">JPG, PNG — 8 photos max</p>
-                        </button>
+                        </div>
                     )}
                 </CldUploadWidget>
+                {/* Force Cloudinary widget overlay above everything on mobile */}
+                <style jsx global>{`
+                    .cloudinary-overlay, 
+                    iframe[src*="cloudinary"],
+                    div[data-test="widget-container"] {
+                        z-index: 99999 !important;
+                    }
+                `}</style>
 
                 {/* Image Previews */}
                 {images.length > 0 && (
