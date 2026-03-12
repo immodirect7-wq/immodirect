@@ -324,22 +324,20 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                     Photos du logement <span className="text-gray-400">(recommandé)</span>
                 </label>
                 <CldUploadWidget
-                    uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                    uploadPreset="immodirect_upload"
                     options={{
                         maxFiles: 8,
-                        resourceType: "image",
                         sources: ["local", "camera"],
                         multiple: true,
-                        language: "fr",
-                        text: {
-                            "fr": {
-                                "or": "ou",
-                                "menu": { "files": "Mes fichiers", "camera": "Caméra" },
-                                "local": { "browse": "Parcourir", "dd_title_single": "Glissez une photo ici", "dd_title_multi": "Glissez des photos ici" }
-                            }
-                        }
                     }}
                     onSuccess={(result: any) => {
+                        if (result.info?.secure_url) {
+                            const newImages = [...imagesRef.current, result.info.secure_url];
+                            imagesRef.current = newImages;
+                            setImages(newImages);
+                        }
+                    }}
+                    onUpload={(result: any) => {
                         if (result.info?.secure_url) {
                             const newImages = [...imagesRef.current, result.info.secure_url];
                             imagesRef.current = newImages;
