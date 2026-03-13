@@ -12,7 +12,7 @@ export default async function EditListingPage({ params }: { params: { id: string
     }
 
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-    if (!user || user.role !== "OWNER") {
+    if (!user) {
         redirect("/");
     }
 
