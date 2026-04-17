@@ -64,7 +64,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <h3 className="font-semibold text-text mb-4">Type de bien</h3>
                         <div className="space-y-2">
                             {/* Added 'Chambre' */}
-                            {['Appartement', 'Maison', 'Studio', 'Chambre', 'Terrain', 'Boutique'].map((type) => (
+                            {['Appartement', 'Appartement meublé', 'Maison', 'Studio', 'Chambre', 'Terrain', 'Boutique', 'Bureau'].map((type) => (
                                 <label key={type} className="flex items-center gap-3 cursor-pointer group">
                                     <input
                                         type="checkbox"

@@ -167,7 +167,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
     };
 
     const cities = ['Douala', 'Yaoundé', 'Bafoussam', 'Kribi', 'Garoua', 'Maroua', 'Bamenda', 'Buea', 'Limbe', 'Ebolowa', 'Ngaoundéré', 'Bertoua'];
-    const types = ['Appartement', 'Maison', 'Boutique', 'Studio', 'Chambre', 'Terrain', 'Bureau'];
+    const types = ['Appartement', 'Appartement meublé', 'Maison', 'Boutique', 'Studio', 'Chambre', 'Terrain', 'Bureau'];
 
     if (status === "loading") {
         return <div className="p-8 text-center text-gray-500">Chargement...</div>;
