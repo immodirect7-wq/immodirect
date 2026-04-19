@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
 
         const pType = listing.propertyType || "Bien";
         const title = `${listing.title} - ${pType} à ${listing.neighborhood}, ${listing.city}`;
-        const description = `${pType} à ${listing.neighborhood}, ${listing.city}. ${listing.price?.toLocaleString()} FCFA/mois. ${(listing.description || "").substring(0, 150)}...`;
+        const description = `${pType} à ${listing.neighborhood}, ${listing.city}. ${listing.price?.toLocaleString()} ${pType === 'Appartement meublé' ? 'FCFA/jour' : 'FCFA/mois'}. ${(listing.description || "").substring(0, 150)}...`;
 
         return {
             title,
@@ -193,9 +193,9 @@ export default async function ListingPage({ params }: ListingPageProps) {
                         <TrustBadge trustScore={listing.owner.trustScore} />
                     </div>
 
-                    <p className="text-primary font-bold text-xl">{listing.price.toLocaleString()} FCFA / mois</p>
+                    <p className="text-primary font-bold text-xl">{listing.price.toLocaleString()} {listing.propertyType === 'Appartement meublé' ? 'FCFA / jour' : 'FCFA / mois'}</p>
                     <p className="text-gray-600">{listing.neighborhood}, {listing.city}</p>
-                    <p className="text-sm text-gray-500">Avance: {listing.advanceMonths} mois</p>
+                    {listing.propertyType !== 'Appartement meublé' && <p className="text-sm text-gray-500">Avance: {listing.advanceMonths} mois</p>}
                     <div className="mt-3">
                         <NavigateButton
                             latitude={listing.latitude}

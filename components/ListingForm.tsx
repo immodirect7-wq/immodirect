@@ -237,7 +237,9 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                     </div>
                 )}
                 <div>
-                    <label className="block text-sm font-medium mb-1">Prix (FCFA / mois)</label>
+                    <label className="block text-sm font-medium mb-1">
+                        {formData.propertyType === 'Appartement meublé' ? 'Prix (FCFA / jour)' : 'Prix (FCFA / mois)'}
+                    </label>
                     <input
                         type="number"
                         className="w-full border rounded-lg p-2"
@@ -248,19 +250,21 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-                <div>
-                    <label className="block text-sm font-medium mb-1">Nombre de mois d'avance</label>
-                    <input
-                        type="number"
-                        min="0"
-                        className="w-full border rounded-lg p-2"
-                        value={formData.advanceMonths}
-                        onChange={(e) => setFormData({ ...formData, advanceMonths: parseInt(e.target.value) || 0 })}
-                        required
-                    />
+            {formData.propertyType !== 'Appartement meublé' && (
+                <div className="grid grid-cols-1 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Nombre de mois d'avance</label>
+                        <input
+                            type="number"
+                            min="0"
+                            className="w-full border rounded-lg p-2"
+                            value={formData.advanceMonths}
+                            onChange={(e) => setFormData({ ...formData, advanceMonths: parseInt(e.target.value) || 0 })}
+                            required
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
                 <div>

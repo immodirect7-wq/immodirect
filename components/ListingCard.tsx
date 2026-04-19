@@ -80,7 +80,7 @@ export default function ListingCard({ id, title, price, neighborhood, city, imag
 
                     <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
                         <span className="text-2xl font-bold text-primary">
-                            {price.toLocaleString()} <span className="text-sm font-normal text-gray-500">FCFA/mois</span>
+                            {price.toLocaleString()} <span className="text-sm font-normal text-gray-500">{propertyType === 'Appartement meublé' ? 'FCFA/jour' : 'FCFA/mois'}</span>
                         </span>
                     </div>
                 </div>
