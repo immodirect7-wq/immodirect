@@ -167,7 +167,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
     };
 
     const cities = ['Douala', 'Yaoundé', 'Bafoussam', 'Kribi', 'Garoua', 'Maroua', 'Bamenda', 'Buea', 'Limbe', 'Ebolowa', 'Ngaoundéré', 'Bertoua'];
-    const types = ['Appartement', 'Appartement meublé', 'Maison', 'Boutique', 'Studio', 'Chambre', 'Terrain', 'Bureau'];
+    const types = ['Appartement', 'Appartement meublé', 'Maison', 'Boutique', 'Studio', 'Chambre', 'Chambre meublée', 'Terrain', 'Bureau'];
 
     if (status === "loading") {
         return <div className="p-8 text-center text-gray-500">Chargement...</div>;
@@ -238,7 +238,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 )}
                 <div>
                     <label className="block text-sm font-medium mb-1">
-                        {formData.propertyType === 'Appartement meublé' ? 'Prix (FCFA / jour)' : 'Prix (FCFA / mois)'}
+                        {formData.propertyType?.includes('meublé') ? 'Prix (FCFA / jour)' : 'Prix (FCFA / mois)'}
                     </label>
                     <input
                         type="number"
@@ -250,7 +250,7 @@ export default function ListingForm({ initialData }: { initialData?: any }) {
                 </div>
             </div>
 
-            {formData.propertyType !== 'Appartement meublé' && (
+            {!formData.propertyType?.includes('meublé') && (
                 <div className="grid grid-cols-1 gap-4">
                     <div>
                         <label className="block text-sm font-medium mb-1">Nombre de mois d'avance</label>
